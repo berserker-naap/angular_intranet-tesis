@@ -16,10 +16,10 @@ export const appRoutes: Routes = [
         canActivateChild: [AuthGuard],
         children: [
             { path: '', component: Dashboard },
+            { path: 'pages', loadChildren: () => import('./app/pages/pages.routes') },
             { path: 'security',  loadChildren: () => import('./app/pages/security/security.routes') },
             { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
             { path: 'documentation', component: Documentation },
-            { path: 'pages', loadChildren: () => import('./app/pages/pages.routes') }
         ]
     },
     { path: 'landing', component: Landing },

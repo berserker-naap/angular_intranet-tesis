@@ -3,3 +3,7 @@
 @use './assets/layout/layout.scss';
 @use 'primeicons/primeicons.css';
 @use './assets/demo/demo.scss';
+
+.p-toggleswitch-slider {
+  position: relative !important;
+}

@@ -20,9 +20,15 @@ export class AppMenu {
 
     ngOnInit() {
         this.model = [
-             {
+            {
                 label: 'Seguridad',
-                items: [{ label: 'Usuarios', icon: 'pi pi-fw pi-home', routerLink: ['security/users'] }]
+                items: [
+                    { label: 'Usuarios', icon: 'pi pi-fw pi-home', routerLink: ['security/usuario'] },
+                    { label: 'Permisos', icon: 'pi pi-fw pi-home', routerLink: ['security/permiso'] },
+                    { label: 'Roles', icon: 'pi pi-fw pi-home', routerLink: ['security/rol'] },
+                    { label: 'Opciones', icon: 'pi pi-fw pi-home', routerLink: ['security/opcion'] },
+                    { label: 'Acciones', icon: 'pi pi-fw pi-home', routerLink: ['security/accion'] },
+                ]
             },
             {
                 label: 'Home',

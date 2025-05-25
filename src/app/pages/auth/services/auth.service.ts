@@ -53,7 +53,7 @@ export class AuthService {
 
         try {
             const payload = JSON.parse(atob(token.split('.')[1]));
-            console.log(payload);
+            console.log(Date.now() >= payload.exp * 1000);
             return Date.now() >= payload.exp * 1000;
         } catch {
             return true;
