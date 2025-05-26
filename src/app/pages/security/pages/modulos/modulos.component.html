@@ -23,7 +23,7 @@
         </div>
 
         <p-table #dt [value]="modulos()" [paginator]="true" [rows]="10" [tableStyle]="{ 'min-width': '60rem' }"
-            [rowHover]="true" [rowsPerPageOptions]="[10, 20, 30]" [globalFilterFields]="['nombre', 'path']"
+            [rowHover]="true" [rowsPerPageOptions]="[10, 20, 30]" [globalFilterFields]="['nombre', 'icono']"
             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} modulos"
             [(selection)]="selectedModulos" dataKey="id">
 
@@ -33,8 +33,7 @@
                         <p-tableHeaderCheckbox />
                     </th>
                     <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
-                    <th pSortableColumn="path">Path <p-sortIcon field="path" /></th>
-                    <th>Visible en navegación</th>
+                    <th pSortableColumn="icono">Icono <p-sortIcon field="icono" /></th>
                     <th>Acciones</th>
                 </tr>
             </ng-template>
@@ -43,11 +42,7 @@
                 <tr>
                     <td><p-tableCheckbox [value]="modulo" /></td>
                     <td>{{ modulo.nombre }}</td>
-                    <td>{{ modulo.path }}</td>
-                    <td>
-                        <p-tag [value]="modulo.isVisibleNavegacion ? 'Sí' : 'No'"
-                            [severity]="modulo.isVisibleNavegacion ? 'success' : 'danger'" />
-                    </td>
+                    <td>{{ modulo.icono }}</td>
                     <td>
                         <p-button icon="pi pi-pencil" severity="info" rounded outlined class="mr-2"
                             (click)="openEdit(modulo)" />
@@ -76,16 +71,11 @@
                 </div>
 
                 <div>
-                    <label for="path" class="block font-bold mb-2">Path</label>
-                    <input id="path" type="text" class="w-full" pInputText formControlName="path" />
-                    <small class="text-red-500" *ngIf="submitted && form.get('path')?.invalid">
-                        El path es obligatorio.
+                    <label for="icono" class="block font-bold mb-2">Icono</label>
+                    <input id="icono" type="text" class="w-full" pInputText formControlName="icono" />
+                    <small class="text-red-500" *ngIf="submitted && form.get('icono')?.invalid">
+                        El icono es obligatorio.
                     </small>
-                </div>
-
-                <div class="flex flex-col gap-2">
-                    <label for="isVisibleNavegacion" class="font-bold">Visible en navegación</label>
-                    <p-inputswitch id="isVisibleNavegacion" formControlName="isVisibleNavegacion" />
                 </div>
             </div>
         </form>

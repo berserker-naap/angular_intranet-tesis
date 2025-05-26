@@ -220,13 +220,13 @@ export class ModulosComponent implements OnInit {
         if (this.modulo.id) {
             const updated = { ...this.modulo, ...data };
 
-            this.modulosService.update(updated.id, {nombre: updated.nombre}).subscribe({
+            this.modulosService.update(updated.id, {nombre: updated.nombre,icono: updated.icono}).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.modulos.set(
                             this.modulos().map(op => op.id === this.modulo.id ? updated : op)
                         );
-                        this.successToast('Opción actualizada correctamente');
+                        this.successToast('Modulo actualizada correctamente');
                     } else {
                         this.errorToast(this.utils.normalizeMessages(res.message));
                     }
@@ -243,7 +243,7 @@ export class ModulosComponent implements OnInit {
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.modulos.set([...this.modulos(), res.data]);
-                        this.successToast('Opción creada correctamente');
+                        this.successToast('Modulo creada correctamente');
                     } else {
                         this.errorToast(this.utils.normalizeMessages(res.message));
                         console.warn(this.utils.normalizeMessages(res.message));

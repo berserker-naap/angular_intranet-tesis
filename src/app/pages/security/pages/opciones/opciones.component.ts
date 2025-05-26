@@ -22,6 +22,8 @@ import { UtilsService } from '../../../../shared/services/utils.service';
 import { StatusResponse } from '../../../../shared/interface/status-response.interface';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { OpcionesService } from '../../services/opciones.service';
+import { ModulosService } from '../../services/modulos.service';
+import { DropdownModule } from 'primeng/dropdown';
 interface Column {
     field: string;
     header: string;
@@ -57,6 +59,7 @@ interface ExportColumn {
         ConfirmDialogModule,
         ReactiveFormsModule,
         InputSwitchModule,
+        DropdownModule
     ],
     templateUrl: './opciones.component.html',
     styleUrls: ['./opciones.component.scss'],
@@ -65,6 +68,7 @@ interface ExportColumn {
 export class OpcionesComponent implements OnInit {
     opcionDialog: boolean = false;
     opciones = signal<any[]>([]);
+    modulos: any[] = [];
     opcion!: any;
     selectedOpciones!: any[] | null;
     submitted: boolean = false;
@@ -74,6 +78,7 @@ export class OpcionesComponent implements OnInit {
     cols!: Column[];
     form!: FormGroup;
     constructor(
+        private modulosService: ModulosService,
         private opcionesService: OpcionesService,
         private messageService: MessageService,
         private utils: UtilsService,
@@ -83,19 +88,40 @@ export class OpcionesComponent implements OnInit {
 
     ngOnInit() {
         this.loadData();
+        this.getModulos(); // 👈 IMPORTANTE: cargar los módulos disponibles
         this.buildForm();
 
     }
 
     buildForm(opcion: any = {}) {
         this.form = this.fb.group({
+            idModulo: [opcion.modulo?.id ?? null, Validators.required], // 👈 clave
             nombre: [opcion.nombre || '', Validators.required],
             path: [opcion.path || '', Validators.required],
             isVisibleNavegacion: [opcion.isVisibleNavegacion ?? false] // default false
         });
     }
 
+    getModulos() {
+        this.modulosService.findAll().subscribe({
+            next: (res: StatusResponse<any>) => {
+                console.log(res);
+                if (res.ok && res.data) {
+                    this.modulos = res.data;
+                } else {
+                    this.errorToast(this.utils.normalizeMessages(res.message));
+                    console.warn(this.utils.normalizeMessages(res.message));
+                }
+            },
+            error: (err) => {
+                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                console.warn(this.utils.normalizeMessages(err?.error?.message));
+            }
+        });
+    }
+
     loadData() {
+        this.modulos = [];
         this.opcionesService.findAll().subscribe({
             next: (res: StatusResponse<any>) => {
                 console.log(res);
@@ -103,11 +129,13 @@ export class OpcionesComponent implements OnInit {
                     this.opciones.set(res.data);
                 } else {
                     this.errorToast(this.utils.normalizeMessages(res.message));
-                        console.warn(this.utils.normalizeMessages(res.message));   }
+                    console.warn(this.utils.normalizeMessages(res.message));
+                }
             },
             error: (err) => {
-                  this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                    console.warn(this.utils.normalizeMessages(err?.error?.message)); }
+                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                console.warn(this.utils.normalizeMessages(err?.error?.message));
+            }
         });
 
         // this.cols = [
@@ -221,11 +249,18 @@ export class OpcionesComponent implements OnInit {
         if (this.opcion.id) {
             const updated = { ...this.opcion, ...data };
 
-            this.opcionesService.update(updated.id, {nombre: updated.nombre}).subscribe({
+            this.opcionesService.update(updated.id,
+                {
+                    idModulo: updated.idModulo,
+                    nombre: updated.nombre,
+                    path: updated.path,
+                    isVisibleNavegacion: updated.isVisibleNavegacion
+                }
+            ).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.opciones.set(
-                            this.opciones().map(op => op.id === this.opcion.id ? updated : op)
+                            this.opciones().map(op => op.id === res.data.id ? res.data : op)
                         );
                         this.successToast('Opción actualizada correctamente');
                     } else {
@@ -243,7 +278,7 @@ export class OpcionesComponent implements OnInit {
             this.opcionesService.create(newOpcion).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
-                        this.opciones.set([...this.opciones(), res.data]);
+                       this.opciones.set([...this.opciones(), res.data]);
                         this.successToast('Opción creada correctamente');
                     } else {
                         this.errorToast(this.utils.normalizeMessages(res.message));

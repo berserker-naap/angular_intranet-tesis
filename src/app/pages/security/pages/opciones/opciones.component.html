@@ -33,6 +33,7 @@
                         <p-tableHeaderCheckbox />
                     </th>
                     <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
+                    <th pSortableColumn="moduloNombre">Modulo <p-sortIcon field="moduloNombre" /></th>
                     <th pSortableColumn="path">Path <p-sortIcon field="path" /></th>
                     <th>Visible en navegación</th>
                     <th>Acciones</th>
@@ -43,6 +44,7 @@
                 <tr>
                     <td><p-tableCheckbox [value]="opcion" /></td>
                     <td>{{ opcion.nombre }}</td>
+                    <td>{{ opcion.modulo?.nombre ?? '-' }}</td>
                     <td>{{ opcion.path }}</td>
                     <td>
                         <p-tag [value]="opcion.isVisibleNavegacion ? 'Sí' : 'No'"
@@ -67,6 +69,22 @@
     <ng-template #content>
         <form [formGroup]="form">
             <div class="flex flex-col gap-6">
+                  <!-- Campo: Módulo (Select) -->
+                <div>
+                    <label for="idModulo" class="block font-bold mb-2">Módulo</label>
+                    <p-dropdown
+                        id="idModulo"
+                        formControlName="idModulo"
+                        [options]="modulos"
+                        optionLabel="nombre"
+                        optionValue="id"
+                        placeholder="Seleccione un módulo"
+                        class="w-full" />
+                    <small class="text-red-500" *ngIf="submitted && form.get('idModulo')?.invalid">
+                        El módulo es obligatorio.
+                    </small>
+                </div>
+
                 <div>
                     <label for="nombre" class="block font-bold mb-2">Nombre</label>
                     <input id="nombre" type="text" class="w-full" pInputText formControlName="nombre" />
