@@ -60,13 +60,13 @@ interface ExportColumn {
     ],
     templateUrl: './modulos.component.html',
     styleUrls: ['./modulos.component.scss'],
-    providers: [MessageService, ModulosService, ConfirmationService]
+    providers: [MessageService, ConfirmationService]
 })
 export class ModulosComponent implements OnInit {
     moduloDialog: boolean = false;
     modulos = signal<any[]>([]);
     modulo!: any;
-    selectedOpciones!: any[] | null;
+    selectedModulos!: any[] | null;
     submitted: boolean = false;
     statuses!: any[];
     @ViewChild('dt') dt!: Table;
@@ -87,29 +87,26 @@ export class ModulosComponent implements OnInit {
 
     }
 
-
     buildForm(modulo: any = {}) {
         this.form = this.fb.group({
             nombre: [modulo.nombre || '', Validators.required],
-            path: [modulo.path || '', Validators.required],
-            isVisibleNavegacion: [modulo.isVisibleNavegacion ?? false] // default false
+            icono: [modulo.icono || '', Validators.required]
         });
     }
 
-
     loadData() {
         this.modulosService.findAll().subscribe({
-            next: (response: StatusResponse<any>) => {
-                console.log(response);
-                if (response.ok && response.data) {
-                    this.modulos.set(response.data);
+            next: (res: StatusResponse<any>) => {
+                console.log(res);
+                if (res.ok && res.data) {
+                    this.modulos.set(res.data);
                 } else {
-                    console.warn(this.utils.normalizeMessages(response.message));
-                }
+                    this.errorToast(this.utils.normalizeMessages(res.message));
+                        console.warn(this.utils.normalizeMessages(res.message));   }
             },
             error: (err) => {
-                console.warn(this.utils.normalizeMessages(err?.error?.message));
-            }
+                  this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                    console.warn(this.utils.normalizeMessages(err?.error?.message)); }
         });
 
         // this.cols = [
@@ -121,14 +118,14 @@ export class ModulosComponent implements OnInit {
 
         // this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
     }
+
     exportCSV() {
         // this.dt.exportCSV();
     }
+
     onGlobalFilter(table: Table, event: Event) {
         table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
     }
-
-
 
     openNew() {
         this.modulo = {};
@@ -144,19 +141,19 @@ export class ModulosComponent implements OnInit {
     }
 
 
-    deleteSelectedOpciones() {
+    deleteSelectedModulos() {
         this.confirmationService.confirm({
-            message: 'Are you sure you want to delete the selected modulos?',
-            header: 'Confirm',
+            message: '¿Estas seguro de eliminar las modulos seleccionadas?',
+            header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                const idsToDelete = this.selectedOpciones?.map(modulo => modulo.id) || [];
+                const idsToDelete = this.selectedModulos?.map(modulo => modulo.id) || [];
                 this.modulosService.deleteMany(idsToDelete).subscribe({
                     next: (response: StatusResponse<any>) => {
                         if (response.ok && response.data) {
-                            this.modulos.set(response.data);
-                            this.modulos.set(this.modulos().filter((val) => !this.selectedOpciones?.includes(val)));
-                            this.selectedOpciones = null;
+                            console.log(response);
+                            this.modulos.set(this.modulos().filter((val) => !this.selectedModulos?.includes(val)));
+                            this.selectedModulos = null;
                             this.messageService.add({
                                 severity: 'success',
                                 summary: 'Successful',
@@ -182,62 +179,103 @@ export class ModulosComponent implements OnInit {
         this.submitted = false;
     }
 
-    deleteOpcion(modulo: any) {
+    deleteModulo(modulo: any) {
         this.confirmationService.confirm({
-            message: 'Are you sure you want to delete ' + modulo.name + '?',
-            header: 'Confirm',
+            message: '¿Estas seguro de eliminar esta modulo ' + modulo.nombre + '?',
+            header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                this.modulos.set(this.modulos().filter((val) => val.id !== modulo.id));
-                this.modulo = {};
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Successful',
-                    detail: 'Opcion Deleted',
-                    life: 3000
+                this.modulosService.delete(modulo.id).subscribe({
+                    next: (res: StatusResponse<any>) => {
+                        if (res.ok && res.data) {
+                            this.modulos.set(this.modulos().filter((val) => val.id !== modulo.id));
+                            this.modulo = {};
+                            this.messageService.add({
+                                severity: 'success',
+                                summary: 'Successful',
+                                detail: 'Modulos Deleted',
+                                life: 3000
+                            });
+                        } else {
+                            this.errorToast(this.utils.normalizeMessages(res.message));
+                            console.warn(this.utils.normalizeMessages(res.message));
+                        }
+                    },
+                    error: (err) => {
+                        this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                        console.warn(this.utils.normalizeMessages(err?.error?.message));
+                    }
                 });
+
             }
         });
     }
 
-    findIndexById(id: string): number {
-        return this.modulos().findIndex(p => p.id === id);
-    }
-
-    saveOpcion() {
+    saveUpdateModulo() {
         this.submitted = true;
-
         if (this.form.invalid) return;
 
         const data = this.form.value;
 
         if (this.modulo.id) {
             const updated = { ...this.modulo, ...data };
-            this.modulos.set(
-                this.modulos().map(op => op.id === this.modulo.id ? updated : op)
-            );
-            this.messageService.add({
-                severity: 'success',
-                summary: 'Actualizado',
-                detail: 'Opción actualizada correctamente',
-                life: 3000
+
+            this.modulosService.update(updated.id, {nombre: updated.nombre}).subscribe({
+                next: (res) => {
+                    if (res.ok && res.data) {
+                        this.modulos.set(
+                            this.modulos().map(op => op.id === this.modulo.id ? updated : op)
+                        );
+                        this.successToast('Opción actualizada correctamente');
+                    } else {
+                        this.errorToast(this.utils.normalizeMessages(res.message));
+                    }
+                },
+                error: (err) => {
+                    this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                }
             });
+
         } else {
-            const newOpcion = {
-                ...data,
-                id: Date.now(), // solo para demo
-                image: 'modulo-placeholder.svg'
-            };
-            this.modulos.set([...this.modulos(), newOpcion]);
-            this.messageService.add({
-                severity: 'success',
-                summary: 'Creado',
-                detail: 'Opción creada correctamente',
-                life: 3000
+            const newModulo = { ...data };
+
+            this.modulosService.create(newModulo).subscribe({
+                next: (res) => {
+                    if (res.ok && res.data) {
+                        this.modulos.set([...this.modulos(), res.data]);
+                        this.successToast('Opción creada correctamente');
+                    } else {
+                        this.errorToast(this.utils.normalizeMessages(res.message));
+                        console.warn(this.utils.normalizeMessages(res.message));
+                    }
+                },
+                error: (err) => {
+                    this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                    console.warn(this.utils.normalizeMessages(err?.error?.message));
+                }
             });
         }
 
         this.moduloDialog = false;
+    }
+
+    private successToast(message: string) {
+        this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: message,
+            life: 3000
+        });
+    }
+
+    private errorToast(message: string | string[]) {
+        const detail = Array.isArray(message) ? message.join('\n') : message;
+        this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail,
+            life: 5000
+        });
     }
 
 }

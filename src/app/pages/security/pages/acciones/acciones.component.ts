@@ -60,7 +60,7 @@ interface ExportColumn {
     ],
     templateUrl: './acciones.component.html',
     styleUrls: ['./acciones.component.scss'],
-    providers: [MessageService, AccionesService, ConfirmationService]
+    providers: [MessageService, ConfirmationService]
 })
 export class AccionesComponent implements OnInit {
     accionDialog: boolean = false;
@@ -96,17 +96,17 @@ export class AccionesComponent implements OnInit {
 
     loadData() {
         this.accionesService.findAll().subscribe({
-            next: (response: StatusResponse<any>) => {
-                console.log(response);
-                if (response.ok && response.data) {
-                    this.acciones.set(response.data);
+            next: (res: StatusResponse<any>) => {
+                console.log(res);
+                if (res.ok && res.data) {
+                    this.acciones.set(res.data);
                 } else {
-                    console.warn(this.utils.normalizeMessages(response.message));
-                }
+                    this.errorToast(this.utils.normalizeMessages(res.message));
+                        console.warn(this.utils.normalizeMessages(res.message));   }
             },
             error: (err) => {
-                console.warn(this.utils.normalizeMessages(err?.error?.message));
-            }
+                  this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                    console.warn(this.utils.normalizeMessages(err?.error?.message)); }
         });
 
         // this.cols = [

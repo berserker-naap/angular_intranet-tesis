@@ -7,7 +7,7 @@ import { StatusResponse } from '../../../shared/interface/status-response.interf
 @Injectable({
   providedIn: 'root'
 })
-export class OpcionsService {
+export class OpcionesService {
   private readonly apiUrl = `${environment.apiUrlSecurity}/opciones`;
 
   private _loading = new BehaviorSubject<boolean>(false);

@@ -26,6 +26,7 @@ export class AppMenu {
                     { label: 'Usuarios', icon: 'pi pi-fw pi-home', routerLink: ['security/usuario'] },
                     { label: 'Permisos', icon: 'pi pi-fw pi-home', routerLink: ['security/permiso'] },
                     { label: 'Roles', icon: 'pi pi-fw pi-home', routerLink: ['security/rol'] },
+                    { label: 'Modulos', icon: 'pi pi-fw pi-home', routerLink: ['security/modulo'] },
                     { label: 'Opciones', icon: 'pi pi-fw pi-home', routerLink: ['security/opcion'] },
                     { label: 'Acciones', icon: 'pi pi-fw pi-home', routerLink: ['security/accion'] },
                 ]

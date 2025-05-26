@@ -18,10 +18,10 @@ import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { ToolbarModule } from 'primeng/toolbar';
-import { OpcionsService } from '../../services/options.service';
 import { UtilsService } from '../../../../shared/services/utils.service';
 import { StatusResponse } from '../../../../shared/interface/status-response.interface';
 import { InputSwitchModule } from 'primeng/inputswitch';
+import { OpcionesService } from '../../services/opciones.service';
 interface Column {
     field: string;
     header: string;
@@ -34,7 +34,7 @@ interface ExportColumn {
 }
 
 @Component({
-    selector: 'app-options',
+    selector: 'app-opciones',
     standalone: true,
     imports: [
         CommonModule,
@@ -58,11 +58,11 @@ interface ExportColumn {
         ReactiveFormsModule,
         InputSwitchModule,
     ],
-    templateUrl: './options.component.html',
-    styleUrls: ['./options.component.scss'],
-    providers: [MessageService, OpcionsService, ConfirmationService]
+    templateUrl: './opciones.component.html',
+    styleUrls: ['./opciones.component.scss'],
+    providers: [MessageService, ConfirmationService]
 })
-export class OptionsComponent implements OnInit {
+export class OpcionesComponent implements OnInit {
     opcionDialog: boolean = false;
     opciones = signal<any[]>([]);
     opcion!: any;
@@ -74,7 +74,7 @@ export class OptionsComponent implements OnInit {
     cols!: Column[];
     form!: FormGroup;
     constructor(
-        private optionsService: OpcionsService,
+        private opcionesService: OpcionesService,
         private messageService: MessageService,
         private utils: UtilsService,
         private confirmationService: ConfirmationService,
@@ -87,7 +87,6 @@ export class OptionsComponent implements OnInit {
 
     }
 
-
     buildForm(opcion: any = {}) {
         this.form = this.fb.group({
             nombre: [opcion.nombre || '', Validators.required],
@@ -96,38 +95,37 @@ export class OptionsComponent implements OnInit {
         });
     }
 
-
     loadData() {
-        this.optionsService.findAll().subscribe({
-            next: (response: StatusResponse<any>) => {
-                console.log(response);
-                if (response.ok && response.data) {
-                    this.opciones.set(response.data);
+        this.opcionesService.findAll().subscribe({
+            next: (res: StatusResponse<any>) => {
+                console.log(res);
+                if (res.ok && res.data) {
+                    this.opciones.set(res.data);
                 } else {
-                    console.warn(this.utils.normalizeMessages(response.message));
-                }
+                    this.errorToast(this.utils.normalizeMessages(res.message));
+                        console.warn(this.utils.normalizeMessages(res.message));   }
             },
             error: (err) => {
-                console.warn(this.utils.normalizeMessages(err?.error?.message));
-            }
+                  this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                    console.warn(this.utils.normalizeMessages(err?.error?.message)); }
         });
 
-        this.cols = [
-            { field: 'Nombre', header: 'Name' },
-            { field: 'image', header: 'Image' },
-            { field: 'price', header: 'Price' },
-            { field: 'category', header: 'Category' }
-        ];
+        // this.cols = [
+        //     { field: 'Nombre', header: 'Name' },
+        //     { field: 'image', header: 'Image' },
+        //     { field: 'price', header: 'Price' },
+        //     { field: 'category', header: 'Category' }
+        // ];
 
-        this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
+        // this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
+    }
+
+    exportCSV() {
+        // this.dt.exportCSV();
     }
 
     onGlobalFilter(table: Table, event: Event) {
         table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
-    }
-
-    exportCSV() {
-        this.dt.exportCSV();
     }
 
     openNew() {
@@ -146,21 +144,21 @@ export class OptionsComponent implements OnInit {
 
     deleteSelectedOpciones() {
         this.confirmationService.confirm({
-            message: 'Are you sure you want to delete the selected opciones?',
-            header: 'Confirm',
+            message: '¿Estas seguro de eliminar las opciones seleccionadas?',
+            header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
                 const idsToDelete = this.selectedOpciones?.map(opcion => opcion.id) || [];
-                this.optionsService.deleteMany(idsToDelete).subscribe({
+                this.opcionesService.deleteMany(idsToDelete).subscribe({
                     next: (response: StatusResponse<any>) => {
                         if (response.ok && response.data) {
-                            this.opciones.set(response.data);
+                            console.log(response);
                             this.opciones.set(this.opciones().filter((val) => !this.selectedOpciones?.includes(val)));
                             this.selectedOpciones = null;
                             this.messageService.add({
                                 severity: 'success',
                                 summary: 'Successful',
-                                detail: 'Opcions Deleted',
+                                detail: 'Opciones Deleted',
                                 life: 3000
                             });
                         } else {
@@ -184,60 +182,101 @@ export class OptionsComponent implements OnInit {
 
     deleteOpcion(opcion: any) {
         this.confirmationService.confirm({
-            message: 'Are you sure you want to delete ' + opcion.name + '?',
-            header: 'Confirm',
+            message: '¿Estas seguro de eliminar esta opcion ' + opcion.nombre + '?',
+            header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                this.opciones.set(this.opciones().filter((val) => val.id !== opcion.id));
-                this.opcion = {};
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Successful',
-                    detail: 'Opcion Deleted',
-                    life: 3000
+                this.opcionesService.delete(opcion.id).subscribe({
+                    next: (res: StatusResponse<any>) => {
+                        if (res.ok && res.data) {
+                            this.opciones.set(this.opciones().filter((val) => val.id !== opcion.id));
+                            this.opcion = {};
+                            this.messageService.add({
+                                severity: 'success',
+                                summary: 'Successful',
+                                detail: 'Opciones Deleted',
+                                life: 3000
+                            });
+                        } else {
+                            this.errorToast(this.utils.normalizeMessages(res.message));
+                            console.warn(this.utils.normalizeMessages(res.message));
+                        }
+                    },
+                    error: (err) => {
+                        this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                        console.warn(this.utils.normalizeMessages(err?.error?.message));
+                    }
                 });
+
             }
         });
     }
 
-    findIndexById(id: string): number {
-        return this.opciones().findIndex(p => p.id === id);
-    }
-
-    saveOpcion() {
+    saveUpdateOpcion() {
         this.submitted = true;
-
         if (this.form.invalid) return;
 
         const data = this.form.value;
 
         if (this.opcion.id) {
             const updated = { ...this.opcion, ...data };
-            this.opciones.set(
-                this.opciones().map(op => op.id === this.opcion.id ? updated : op)
-            );
-            this.messageService.add({
-                severity: 'success',
-                summary: 'Actualizado',
-                detail: 'Opción actualizada correctamente',
-                life: 3000
+
+            this.opcionesService.update(updated.id, {nombre: updated.nombre}).subscribe({
+                next: (res) => {
+                    if (res.ok && res.data) {
+                        this.opciones.set(
+                            this.opciones().map(op => op.id === this.opcion.id ? updated : op)
+                        );
+                        this.successToast('Opción actualizada correctamente');
+                    } else {
+                        this.errorToast(this.utils.normalizeMessages(res.message));
+                    }
+                },
+                error: (err) => {
+                    this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                }
             });
+
         } else {
-            const newOpcion = {
-                ...data,
-                id: Date.now(), // solo para demo
-                image: 'opcion-placeholder.svg'
-            };
-            this.opciones.set([...this.opciones(), newOpcion]);
-            this.messageService.add({
-                severity: 'success',
-                summary: 'Creado',
-                detail: 'Opción creada correctamente',
-                life: 3000
+            const newOpcion = { ...data };
+
+            this.opcionesService.create(newOpcion).subscribe({
+                next: (res) => {
+                    if (res.ok && res.data) {
+                        this.opciones.set([...this.opciones(), res.data]);
+                        this.successToast('Opción creada correctamente');
+                    } else {
+                        this.errorToast(this.utils.normalizeMessages(res.message));
+                        console.warn(this.utils.normalizeMessages(res.message));
+                    }
+                },
+                error: (err) => {
+                    this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                    console.warn(this.utils.normalizeMessages(err?.error?.message));
+                }
             });
         }
 
         this.opcionDialog = false;
+    }
+
+    private successToast(message: string) {
+        this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: message,
+            life: 3000
+        });
+    }
+
+    private errorToast(message: string | string[]) {
+        const detail = Array.isArray(message) ? message.join('\n') : message;
+        this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail,
+            life: 5000
+        });
     }
 
 }

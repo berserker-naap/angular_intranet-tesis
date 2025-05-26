@@ -1,6 +1,6 @@
 import { AccionesComponent } from './pages/acciones/acciones.component';
 import { ModulosComponent } from './pages/modulos/modulos.component';
-import { OptionsComponent } from './pages/options/options.component';
+import { OpcionesComponent } from './pages/opciones/opciones.component';
 // src/app/pages/security/security.routes.ts
 import { Routes } from '@angular/router';
 
@@ -18,16 +18,17 @@ export const SECURITY_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/modulos/modulos.component').then(m => m.ModulosComponent),
       },
+       {
+        path: 'opcion',
+        loadComponent: () =>
+          import('./pages/opciones/opciones.component').then(m => m.OpcionesComponent),
+      },
       {
         path: 'accion',
         loadComponent: () =>
           import('./pages/acciones/acciones.component').then(m => m.AccionesComponent),
       },
-      {
-        path: 'opcion',
-        loadComponent: () =>
-          import('./pages/options/options.component').then(m => m.OptionsComponent),
-      }
+
     ]
   }
 ];

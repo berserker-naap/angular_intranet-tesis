@@ -12,7 +12,7 @@
 
     <div class="card-body">
 
-        <div class="flex w-full items-center flex-wrap justify-between py-3">
+       <div class="flex w-full items-center flex-wrap justify-between py-3">
             <p-iconfield>
                 <p-inputicon styleClass="pi pi-search" />
                 <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Buscar..." />
@@ -93,7 +93,7 @@
 
     <ng-template #footer>
         <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
-        <p-button label="Guardar" icon="pi pi-check" (click)="saveOpcion()" />
+        <p-button label="Guardar" icon="pi pi-check" (click)="saveUpdateOpcion()" />
     </ng-template>
 </p-dialog>
 <p-toast position="top-right"></p-toast>

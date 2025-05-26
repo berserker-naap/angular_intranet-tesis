@@ -8,7 +8,7 @@ import { StatusResponse } from '../../../shared/interface/status-response.interf
   providedIn: 'root'
 })
 export class ModulosService {
-  private readonly apiUrl = `${environment.apiUrlSecurity}/modules`;
+  private readonly apiUrl = `${environment.apiUrlSecurity}/modulo`;
 
   private _loading = new BehaviorSubject<boolean>(false);
   public readonly loading$: Observable<boolean> = this._loading.asObservable();

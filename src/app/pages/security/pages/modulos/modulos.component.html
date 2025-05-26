@@ -1,7 +1,7 @@
 <div class="card !mb-8">
     <div class="card-header">
         <div class="flex items-center justify-between">
-            <h1 class="font-semibold text-xl mb-0">Opciones</h1>
+            <h1 class="font-semibold text-xl mb-0">Modulos</h1>
             <div>
                 <p-button label="Nuevo" icon="pi pi-plus" severity="success" class="mr-2" (click)="openNew()" />
                 <p-button label="Exportar" icon="pi pi-upload" severity="secondary" (click)="exportCSV()" />
@@ -12,20 +12,20 @@
 
     <div class="card-body">
 
-        <div class="flex w-full items-center flex-wrap justify-between py-3">
+       <div class="flex w-full items-center flex-wrap justify-between py-3">
             <p-iconfield>
                 <p-inputicon styleClass="pi pi-search" />
                 <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Buscar..." />
             </p-iconfield>
 
-            <p-button severity="danger" label="Eliminar" icon="pi pi-trash" outlined (click)="deleteSelectedOpciones()"
-                [disabled]="!selectedOpciones?.length" />
+            <p-button severity="danger" label="Eliminar" icon="pi pi-trash" outlined (click)="deleteSelectedModulos()"
+                [disabled]="!selectedModulos?.length" />
         </div>
 
         <p-table #dt [value]="modulos()" [paginator]="true" [rows]="10" [tableStyle]="{ 'min-width': '60rem' }"
             [rowHover]="true" [rowsPerPageOptions]="[10, 20, 30]" [globalFilterFields]="['nombre', 'path']"
             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} modulos"
-            [(selection)]="selectedOpciones" dataKey="id">
+            [(selection)]="selectedModulos" dataKey="id">
 
             <ng-template #header>
                 <tr>
@@ -52,7 +52,7 @@
                         <p-button icon="pi pi-pencil" severity="info" rounded outlined class="mr-2"
                             (click)="openEdit(modulo)" />
                         <p-button icon="pi pi-trash" severity="danger" rounded outlined
-                            (click)="deleteOpcion(modulo)" />
+                            (click)="deleteModulo(modulo)" />
                     </td>
                 </tr>
             </ng-template>
@@ -93,7 +93,7 @@
 
     <ng-template #footer>
         <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
-        <p-button label="Guardar" icon="pi pi-check" (click)="saveOpcion()" />
+        <p-button label="Guardar" icon="pi pi-check" (click)="saveUpdateModulo()" />
     </ng-template>
 </p-dialog>
 <p-toast position="top-right"></p-toast>
