@@ -24,6 +24,8 @@ import { InputSwitchModule } from 'primeng/inputswitch';
 import { OpcionesService } from '../../services/opciones.service';
 import { ModulosService } from '../../services/modulos.service';
 import { DropdownModule } from 'primeng/dropdown';
+import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
+import { Observable } from 'rxjs';
 interface Column {
     field: string;
     header: string;
@@ -59,7 +61,8 @@ interface ExportColumn {
         ConfirmDialogModule,
         ReactiveFormsModule,
         InputSwitchModule,
-        DropdownModule
+        DropdownModule,
+        LoadingOverlayComponent
     ],
     templateUrl: './opciones.component.html',
     styleUrls: ['./opciones.component.scss'],
@@ -77,6 +80,7 @@ export class OpcionesComponent implements OnInit {
     exportColumns!: ExportColumn[];
     cols!: Column[];
     form!: FormGroup;
+    loading$: Observable<boolean> = new Observable<boolean>( observer => observer.next(false)); // Observable boolean
     constructor(
         private modulosService: ModulosService,
         private opcionesService: OpcionesService,
@@ -84,7 +88,9 @@ export class OpcionesComponent implements OnInit {
         private utils: UtilsService,
         private confirmationService: ConfirmationService,
         private fb: FormBuilder,
-    ) { }
+    ) {
+         this.loading$ = this.opcionesService.loading$; // Observable boolean
+     }
 
     ngOnInit() {
         this.loadData();
