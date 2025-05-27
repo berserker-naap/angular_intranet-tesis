@@ -1,3 +1,4 @@
+import { RolesComponent } from './pages/roles/roles.component';
 import { AccionesComponent } from './pages/acciones/acciones.component';
 import { ModulosComponent } from './pages/modulos/modulos.component';
 import { OpcionesComponent } from './pages/opciones/opciones.component';
@@ -12,6 +13,16 @@ export const SECURITY_ROUTES: Routes = [
         path: 'usuario',
         loadComponent: () =>
           import('./pages/users/users.component').then(m => m.UsersComponent),
+      },
+      {
+        path: 'multitabla',
+        loadComponent: () =>
+          import('./pages/users/users.component').then(m => m.UsersComponent),
+      },
+      {
+        path: 'rol',
+        loadComponent: () =>
+          import('./pages/roles/roles.component').then(m => m.RolesComponent),
       },
       {
         path: 'modulo',

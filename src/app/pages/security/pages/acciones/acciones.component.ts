@@ -22,6 +22,8 @@ import { UtilsService } from '../../../../shared/services/utils.service';
 import { StatusResponse } from '../../../../shared/interface/status-response.interface';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { AccionesService } from '../../services/acciones.service';
+import { Observable } from 'rxjs';
+import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 interface Column {
     field: string;
     header: string;
@@ -57,6 +59,7 @@ interface ExportColumn {
         ConfirmDialogModule,
         ReactiveFormsModule,
         InputSwitchModule,
+        LoadingOverlayComponent
     ],
     templateUrl: './acciones.component.html',
     styleUrls: ['./acciones.component.scss'],
@@ -73,13 +76,16 @@ export class AccionesComponent implements OnInit {
     exportColumns!: ExportColumn[];
     cols!: Column[];
     form!: FormGroup;
+    loading$: Observable<boolean> = new Observable<boolean>( observer => observer.next(false)); // Observable boolean
     constructor(
         private accionesService: AccionesService,
         private messageService: MessageService,
         private utils: UtilsService,
         private confirmationService: ConfirmationService,
         private fb: FormBuilder,
-    ) { }
+    ) {
+         this.loading$ = this.accionesService.loading$; // Observable boolean
+    }
 
     ngOnInit() {
         this.loadData();
