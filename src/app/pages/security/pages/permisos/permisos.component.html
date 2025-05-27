@@ -1,0 +1,47 @@
+<div class="card">
+  <div class="mb-4">
+    <label class="font-bold block mb-2">Rol</label>
+    <p-dropdown
+      [options]="roles"
+      optionLabel="nombre"
+      optionValue="id"
+      [(ngModel)]="rolSeleccionado"
+      placeholder="Seleccione un rol"
+      (onChange)="cargarPermisos()"
+      class="w-full"
+    />
+  </div>
+
+  <div *ngIf="permisos.length">
+    <div *ngFor="let modulo of permisos" class="mb-4">
+      <h3 class="font-semibold text-lg">{{ modulo.nombre }} (Módulo)</h3>
+
+      <div *ngFor="let opcion of modulo.opciones" class="ml-4 mb-3">
+        <h4 class="text-sm font-medium">{{ opcion.nombre }} (Opción)</h4>
+
+        <div class="flex flex-wrap gap-3 ml-4">
+          <div
+            *ngFor="let accion of opcion.acciones"
+            class="flex items-center gap-2"
+          >
+            <p-checkbox
+              [inputId]="'chk_' + opcion.id + '_' + accion.id"
+              [binary]="true"
+              [(ngModel)]="accion.asignado"
+              (ngModelChange)="togglePermiso(opcion.id, accion.id, $event)">
+            </p-checkbox>
+
+            <label
+              [for]="'chk_' + opcion.id + '_' + accion.id"
+              class="text-sm">
+              {{ accion.nombre }}
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<p-toast position="top-right"></p-toast>
+<app-loading-overlay
+  [loading]="(loading$ | async) ?? false || (loadingRoles$ | async) ?? false" />

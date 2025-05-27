@@ -88,3 +88,5 @@
 </p-dialog>
 <p-toast position="top-right"></p-toast>
 <p-confirmdialog [style]="{ width: '450px' }" />
+
+<app-loading-overlay [loading]="(loading$ | async) ?? false" />

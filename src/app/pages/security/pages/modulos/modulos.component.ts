@@ -22,6 +22,8 @@ import { ModulosService } from '../../services/modulos.service';
 import { UtilsService } from '../../../../shared/services/utils.service';
 import { StatusResponse } from '../../../../shared/interface/status-response.interface';
 import { InputSwitchModule } from 'primeng/inputswitch';
+import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
+import { Observable } from 'rxjs';
 interface Column {
     field: string;
     header: string;
@@ -57,6 +59,7 @@ interface ExportColumn {
         ConfirmDialogModule,
         ReactiveFormsModule,
         InputSwitchModule,
+        LoadingOverlayComponent
     ],
     templateUrl: './modulos.component.html',
     styleUrls: ['./modulos.component.scss'],
@@ -73,13 +76,16 @@ export class ModulosComponent implements OnInit {
     exportColumns!: ExportColumn[];
     cols!: Column[];
     form!: FormGroup;
+    loading$: Observable<boolean> = new Observable<boolean>(observer => observer.next(false)); // Observable boolean
     constructor(
         private modulosService: ModulosService,
         private messageService: MessageService,
         private utils: UtilsService,
         private confirmationService: ConfirmationService,
         private fb: FormBuilder,
-    ) { }
+    ) {
+        this.loading$ = this.modulosService.loading$; // Observable boolean
+    }
 
     ngOnInit() {
         this.loadData();
@@ -102,11 +108,13 @@ export class ModulosComponent implements OnInit {
                     this.modulos.set(res.data);
                 } else {
                     this.errorToast(this.utils.normalizeMessages(res.message));
-                        console.warn(this.utils.normalizeMessages(res.message));   }
+                    console.warn(this.utils.normalizeMessages(res.message));
+                }
             },
             error: (err) => {
-                  this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                    console.warn(this.utils.normalizeMessages(err?.error?.message)); }
+                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                console.warn(this.utils.normalizeMessages(err?.error?.message));
+            }
         });
 
         // this.cols = [
@@ -220,7 +228,7 @@ export class ModulosComponent implements OnInit {
         if (this.modulo.id) {
             const updated = { ...this.modulo, ...data };
 
-            this.modulosService.update(updated.id, {nombre: updated.nombre,icono: updated.icono}).subscribe({
+            this.modulosService.update(updated.id, { nombre: updated.nombre, icono: updated.icono }).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.modulos.set(
