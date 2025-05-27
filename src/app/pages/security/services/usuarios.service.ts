@@ -8,7 +8,7 @@ import { CreateUsuarioDto, UsuarioDto } from '../interfaces';
 @Injectable({
     providedIn: 'root'
 })
-export class UsersService {
+export class UsuariosService {
     private readonly apiUrl = `${environment.apiUrlSecurity}/usuario`;
 
     private _loading = new BehaviorSubject<boolean>(false);

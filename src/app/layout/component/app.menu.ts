@@ -20,21 +20,50 @@ export class AppMenu {
 
     ngOnInit() {
         this.model = [
+             {
+                label: 'Home',
+                items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/'] }]
+            },
             {
                 label: 'Seguridad',
                 items: [
                     { label: 'Usuarios', icon: 'pi pi-fw pi-home', routerLink: ['security/usuario'] },
-                    { label: 'Permisos', icon: 'pi pi-fw pi-home', routerLink: ['security/permiso'] },
+                    { label: 'Persona', icon: 'pi pi-fw pi-home', routerLink: ['security/persona'] },
                     { label: 'Roles', icon: 'pi pi-fw pi-home', routerLink: ['security/rol'] },
+                    { label: 'Permisos', icon: 'pi pi-fw pi-home', routerLink: ['security/permiso'] },
                     { label: 'Modulos', icon: 'pi pi-fw pi-home', routerLink: ['security/modulo'] },
                     { label: 'Opciones', icon: 'pi pi-fw pi-home', routerLink: ['security/opcion'] },
                     { label: 'Acciones', icon: 'pi pi-fw pi-home', routerLink: ['security/accion'] },
+                    { label: 'Multitabla', icon: 'pi pi-fw pi-home', routerLink: ['security/multitabla'] },
                 ]
             },
             {
-                label: 'Home',
-                items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/'] }]
+                label: 'Finanzas',
+                items: [
+                    { label: 'Bancos', icon: 'pi pi-fw pi-home', routerLink: ['security/persona'] },
+                    { label: 'Cronogramas', icon: 'pi pi-fw pi-home', routerLink: ['security/persona'] },
+                    { label: 'Cuenta', icon: 'pi pi-fw pi-home', routerLink: ['security/persona'] },
+                    { label: 'Tipo de Cuenta', icon: 'pi pi-fw pi-home', routerLink: ['security/modulo'] },
+                    { label: 'Categorias', icon: 'pi pi-fw pi-home', routerLink: ['security/persona'] },
+                    { label: 'Sub Categorias', icon: 'pi pi-fw pi-home', routerLink: ['security/usuario'] },
+                    { label: 'Ingresos', icon: 'pi pi-fw pi-home', routerLink: ['security/rol'] },
+                    { label: 'Egresos', icon: 'pi pi-fw pi-home', routerLink: ['security/permiso'] },
+                    { label: 'Transacciones', icon: 'pi pi-fw pi-home', routerLink: ['security/opcion'] },
+                ]
             },
+            {
+                label: 'IA',
+                items: [
+                    { label: 'Consultas', icon: 'pi pi-fw pi-home', routerLink: ['security/usuario'] },
+                ]
+            },
+            {
+                label: 'REPORTES',
+                items: [
+                    { label: 'Consultas', icon: 'pi pi-fw pi-home', routerLink: ['security/usuario'] },
+                ]
+            },
+
             {
                 label: 'UI Components',
                 items: [
