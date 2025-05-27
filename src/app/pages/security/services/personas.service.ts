@@ -7,8 +7,8 @@ import { StatusResponse } from '../../../shared/interface/status-response.interf
 @Injectable({
   providedIn: 'root'
 })
-export class UsersService {
-  private readonly apiUrl = `${environment.apiUrlSecurity}/users`;
+export class PersonasService {
+  private readonly apiUrl = `${environment.apiUrlSecurity}/persona`;
 
   private _loading = new BehaviorSubject<boolean>(false);
   public readonly loading$: Observable<boolean> = this._loading.asObservable();

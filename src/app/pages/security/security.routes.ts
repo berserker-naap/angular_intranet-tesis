@@ -1,3 +1,4 @@
+import { UsuariosComponent } from './pages/usuarios/usuarios.component';
 import { RolesComponent } from './pages/roles/roles.component';
 import { AccionesComponent } from './pages/acciones/acciones.component';
 import { ModulosComponent } from './pages/modulos/modulos.component';
@@ -12,13 +13,18 @@ export const SECURITY_ROUTES: Routes = [
             {
                 path: 'usuario',
                 loadComponent: () =>
-                    import('./pages/users/users.component').then(m => m.UsersComponent),
+                    import('./pages/usuarios/usuarios.component').then(m => m.UsuariosComponent),
             },
             {
-                path: 'multitabla',
+                path: 'persona',
                 loadComponent: () =>
-                    import('./pages/users/users.component').then(m => m.UsersComponent),
+                    import('./pages/personas/personas.component').then(m => m.PersonasComponent),
             },
+            // {
+            //     path: 'multitabla',
+            //     loadComponent: () =>
+            //         import('./pages/users/acc.component').then(m => m.UsersComponent),
+            // },
             {
                 path: 'rol',
                 loadComponent: () =>

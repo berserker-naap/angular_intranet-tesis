@@ -25,10 +25,10 @@ import { ModulosService } from '../../services/modulos.service';
 import { DropdownModule } from 'primeng/dropdown';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 import { Observable } from 'rxjs';
-import { PermisoModulo } from '../../../../shared/interface/general';
 import { PermisoService } from '../../services/permiso.service';
 import { RolesService } from '../../services/roles.service';
 import { CheckboxModule } from 'primeng/checkbox';
+import { PermisoModulo } from '../../interfaces';
 interface Column {
     field: string;
     header: string;
