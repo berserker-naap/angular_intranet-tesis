@@ -1,3 +1,4 @@
+import { MultitablaService } from './../../services/multitabla.service';
 import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Table, TableModule } from 'primeng/table';
@@ -24,6 +25,8 @@ import { InputSwitchModule } from 'primeng/inputswitch';
 import { PersonasService } from '../../services/personas.service';
 import { Observable } from 'rxjs';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
+import { DropdownModule } from 'primeng/dropdown';
+import { DatePickerModule } from 'primeng/datepicker';
 interface Column {
     field: string;
     header: string;
@@ -59,6 +62,8 @@ interface ExportColumn {
         ConfirmDialogModule,
         ReactiveFormsModule,
         InputSwitchModule,
+        DatePickerModule,
+        DropdownModule,
         LoadingOverlayComponent
     ],
     templateUrl: './personas.component.html',
@@ -77,8 +82,11 @@ export class PersonasComponent implements OnInit {
     cols!: Column[];
     form!: FormGroup;
     loading$: Observable<boolean> = new Observable<boolean>(observer => observer.next(false)); // Observable boolean
+
+    tipoDocumentos: any[] = [];
     constructor(
         private personasService: PersonasService,
+        private multitablaService: MultitablaService,
         private messageService: MessageService,
         private utils: UtilsService,
         private confirmationService: ConfirmationService,
@@ -89,9 +97,28 @@ export class PersonasComponent implements OnInit {
 
     ngOnInit() {
         this.loadData();
+         this.getTipoDocumentos();
         this.buildForm();
     }
 
+
+      getTipoDocumentos() {
+        this.multitablaService.getTipoDocumento().subscribe({
+            next: (res: StatusResponse<any>) => {
+                console.log(res);
+                if (res.ok && res.data) {
+                    this.tipoDocumentos = res.data.items;
+                } else {
+                    this.errorToast(this.utils.normalizeMessages(res.message));
+                    console.warn(this.utils.normalizeMessages(res.message));
+                }
+            },
+            error: (err) => {
+                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                console.warn(this.utils.normalizeMessages(err?.error?.message));
+            }
+        });
+    }
 
     buildForm(persona: any = {}) {
         this.form = this.fb.group({

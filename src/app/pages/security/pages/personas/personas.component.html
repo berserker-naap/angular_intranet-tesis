@@ -54,29 +54,74 @@
     </div>
 </div>
 
+<p-dialog [(visible)]="personaDialog" [style]="{ width: '750px' }" header="Detalle de Persona" [modal]="true" [draggable]="false">
+  <ng-template #content>
+    <form [formGroup]="form">
+      <div class="flex flex-col gap-6">
 
-<p-dialog [(visible)]="personaDialog" [style]="{ width: '450px' }" header="Detalle de Opción" [modal]="true"
-    [draggable]="false">
-    <ng-template #content>
-        <form [formGroup]="form">
-            <div class="flex flex-col gap-6">
-                <div>
-                    <label for="nombre" class="block font-bold mb-2">Nombre</label>
-                    <input id="nombre" type="text" class="w-full" pInputText formControlName="nombre" />
-                    <small class="text-red-500" *ngIf="submitted && form.get('nombre')?.invalid">
-                        El nombre es obligatorio.
-                    </small>
-                </div>
 
-            </div>
-        </form>
-    </ng-template>
+        <!-- Nombre -->
+        <div>
+          <label for="nombre" class="block font-bold mb-2">Nombre</label>
+          <input id="nombre" type="text" class="w-full" pInputText formControlName="nombre" />
+          <small class="text-red-500" *ngIf="submitted && form.get('nombre')?.invalid">
+            El nombre es obligatorio.
+          </small>
+        </div>
 
-    <ng-template #footer>
-        <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
-        <p-button label="Guardar" icon="pi pi-check" (click)="saveUpdatePersona()" />
-    </ng-template>
+        <!-- Apellido -->
+        <div>
+          <label for="apellido" class="block font-bold mb-2">Apellido</label>
+          <input id="apellido" type="text" class="w-full" pInputText formControlName="apellido" />
+          <small class="text-red-500" *ngIf="submitted && form.get('apellido')?.invalid">
+            El apellido es obligatorio.
+          </small>
+        </div>
+
+         <!-- Tipo de Documento -->
+        <div>
+          <label for="idTipoDocumentoIdentidad" class="block font-bold mb-2">Tipo de Documento</label>
+          <p-dropdown
+            id="idTipoDocumentoIdentidad"
+            formControlName="idTipoDocumentoIdentidad"
+            [options]="tipoDocumentos"
+            optionLabel="nombre"
+            optionValue="id"
+            placeholder="Seleccione un Tipo de Documento"
+            class="w-full" />
+          <small class="text-red-500" *ngIf="submitted && form.get('idTipoDocumentoIdentidad')?.invalid">
+            El tipo de documento es obligatorio.
+          </small>
+        </div>
+        
+        <!-- Documento de Identidad -->
+        <div>
+          <label for="documentoIdentidad" class="block font-bold mb-2">Documento de Identidad</label>
+          <input id="documentoIdentidad" type="text" class="w-full" pInputText formControlName="documentoIdentidad" />
+          <small class="text-red-500" *ngIf="submitted && form.get('documentoIdentidad')?.invalid">
+            El documento de identidad es obligatorio.
+          </small>
+        </div>
+
+        <!-- Fecha de Nacimiento -->
+        <div>
+          <label for="fechaNacimiento" class="block font-bold mb-2">Fecha de Nacimiento</label>
+        <p-datepicker
+  [showIcon]="true"
+  [showButtonBar]="true"
+  formControlName="fechaNacimiento">
+</p-datepicker>
+          <small class="text-red-500" *ngIf="submitted && form.get('fechaNacimiento')?.invalid">
+            La fecha de nacimiento es obligatoria.
+          </small>
+        </div>
+
+
+      </div>
+    </form>
+  </ng-template>
 </p-dialog>
+
 <p-toast position="top-right"></p-toast>
 <p-confirmdialog [style]="{ width: '450px' }" />
 
