@@ -1,9 +1,4 @@
-import { UsuariosComponent } from './pages/usuarios/usuarios.component';
-import { RolesComponent } from './pages/roles/roles.component';
-import { AccionesComponent } from './pages/acciones/acciones.component';
-import { ModulosComponent } from './pages/modulos/modulos.component';
-import { OpcionesComponent } from './pages/opciones/opciones.component';
-// src/app/pages/security/security.routes.ts
+
 import { Routes } from '@angular/router';
 
 export const SECURITY_ROUTES: Routes = [
@@ -20,11 +15,11 @@ export const SECURITY_ROUTES: Routes = [
                 loadComponent: () =>
                     import('./pages/personas/personas.component').then(m => m.PersonasComponent),
             },
-            // {
-            //     path: 'multitabla',
-            //     loadComponent: () =>
-            //         import('./pages/users/acc.component').then(m => m.UsersComponent),
-            // },
+            {
+                path: 'multitabla',
+                loadComponent: () =>
+                    import('./pages/multitabla/multitabla.component').then(m => m.MultitablaComponent),
+            },
             {
                 path: 'rol',
                 loadComponent: () =>

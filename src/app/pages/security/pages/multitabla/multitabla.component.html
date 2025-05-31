@@ -1,7 +1,7 @@
 <div class="card !mb-8">
     <div class="card-header">
         <div class="flex items-center justify-between">
-            <h1 class="font-semibold text-xl mb-0">Multitablas</h1>
+            <h1 class="font-semibold text-xl mb-0">Multitabla</h1>
             <div>
                 <p-button label="Nuevo" icon="pi pi-plus" severity="success" class="mr-2" (click)="openNew()" />
                 <p-button label="Exportar" icon="pi pi-upload" severity="secondary" (click)="exportCSV()" />
@@ -33,7 +33,6 @@
                         <p-tableHeaderCheckbox />
                     </th>
                     <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
-                    <th pSortableColumn="icono">Icono <p-sortIcon field="icono" /></th>
                     <th>Acciones</th>
                 </tr>
             </ng-template>
@@ -42,7 +41,6 @@
                 <tr>
                     <td><p-tableCheckbox [value]="multitabla" /></td>
                     <td>{{ multitabla.nombre }}</td>
-                    <td>{{ multitabla.icono }}</td>
                     <td>
                         <p-button icon="pi pi-pencil" severity="info" rounded outlined class="mr-2"
                             (click)="openEdit(multitabla)" />
@@ -56,37 +54,82 @@
     </div>
 </div>
 
+<p-dialog
+  [(visible)]="multitablaDialog"
+  [style]="{ width: '750px' }"
+  header="{{ form.get('id')?.value ? 'Editar Multitabla' : 'Nueva Multitabla' }}"
+  [modal]="true"
+  [draggable]="false"
+  [closable]="false"
+>
+  <ng-template #content>
+    <form [formGroup]="form">
+      <div class="flex flex-col gap-5">
+        <!-- CABECERA -->
+        <h5>Cabecera</h5>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="font-bold mb-1 block">Nombre</label>
+            <input pInputText formControlName="nombre" class="w-full" />
+            <small class="text-red-500" *ngIf="submitted && form.get('nombre')?.invalid">
+              El nombre es obligatorio.
+            </small>
+          </div>
+          <div>
+            <label class="font-bold mb-1 block">Valor</label>
+            <input pInputText formControlName="valor" class="w-full" />
+          </div>
+        </div>
 
-<p-dialog [(visible)]="multitablaDialog" [style]="{ width: '450px' }" header="Detalle de Opción" [modal]="true"
-    [draggable]="false">
-    <ng-template #content>
-        <form [formGroup]="form">
-            <div class="flex flex-col gap-6">
-                <div>
-                    <label for="nombre" class="block font-bold mb-2">Nombre</label>
-                    <input id="nombre" type="text" class="w-full" pInputText formControlName="nombre" />
-                    <small class="text-red-500" *ngIf="submitted && form.get('nombre')?.invalid">
-                        El nombre es obligatorio.
-                    </small>
-                </div>
 
-                <div>
-                    <label for="icono" class="block font-bold mb-2">Icono</label>
-                    <input id="icono" type="text" class="w-full" pInputText formControlName="icono" />
-                    <small class="text-red-500" *ngIf="submitted && form.get('icono')?.invalid">
-                        El icono es obligatorio.
-                    </small>
-                </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="font-bold mb-1 block">Valor 2</label>
+            <input pInputText formControlName="valor2" class="w-full" />
+          </div>
+        </div>
+        <h5>Detalle</h5>
+        <!-- ITEMS DINÁMICOS -->
+        <div class="flex justify-between items-center mt-2">
+          <h4 class="font-semibold text-lg">Items</h4>
+          <p-button label="Agregar Item" icon="pi pi-plus" (click)="agregarItem()" />
+        </div>
+
+        <div formArrayName="items" class="flex flex-col gap-3">
+          <div
+            *ngFor="let item of items.controls; let i = index"
+            [formGroupName]="i"
+            class="border p-3 rounded-md bg-gray-50"
+          >
+            <div class="grid grid-cols-4 gap-3 items-center">
+              <input pInputText formControlName="nombre" placeholder="Nombre" />
+              <input pInputText formControlName="valor" placeholder="Valor" />
+              <input pInputText formControlName="valor2" placeholder="Valor 2" />
+              <button
+                pButton
+                icon="pi pi-trash"
+                class="p-button-danger p-button-text"
+                (click)="eliminarItem(i)"
+                type="button"
+              ></button>
             </div>
-        </form>
-    </ng-template>
+          </div>
+        </div>
+      </div>
+    </form>
+  </ng-template>
 
-    <ng-template #footer>
-        <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
-        <p-button label="Guardar" icon="pi pi-check" (click)="saveUpdateMultitabla()" />
-    </ng-template>
+  <ng-template #footer>
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
+      <p-button label="Guardar" icon="pi pi-check" (click)="saveUpdateMultitabla()" />
+    </div>
+  </ng-template>
 </p-dialog>
+
+
 <p-toast position="top-right"></p-toast>
+
 <p-confirmdialog [style]="{ width: '450px' }" />
 
 <app-loading-overlay [loading]="(loading$ | async) ?? false" />

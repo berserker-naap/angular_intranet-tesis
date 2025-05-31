@@ -2,7 +2,7 @@ import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Table, TableModule } from 'primeng/table';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
@@ -36,7 +36,7 @@ interface ExportColumn {
 }
 
 @Component({
-    selector: 'app-multitablas',
+    selector: 'app-multitabla',
     standalone: true,
     imports: [
         CommonModule,
@@ -61,11 +61,11 @@ interface ExportColumn {
         InputSwitchModule,
         LoadingOverlayComponent
     ],
-    templateUrl: './multitablas.component.html',
-    styleUrls: ['./multitablas.component.scss'],
+    templateUrl: './multitabla.component.html',
+    styleUrls: ['./multitabla.component.scss'],
     providers: [MessageService, ConfirmationService]
 })
-export class MultitablasComponent implements OnInit {
+export class MultitablaComponent implements OnInit {
     multitablaDialog: boolean = false;
     multitablas = signal<any[]>([]);
     multitabla!: any;
@@ -76,6 +76,7 @@ export class MultitablasComponent implements OnInit {
     exportColumns!: ExportColumn[];
     cols!: Column[];
     form!: FormGroup;
+    items!: FormArray;
     loading$: Observable<boolean> = new Observable<boolean>(observer => observer.next(false)); // Observable boolean
     constructor(
         private multitablaService: MultitablaService,
@@ -94,11 +95,28 @@ export class MultitablasComponent implements OnInit {
     }
 
     buildForm(multitabla: any = {}) {
+        this.items = this.fb.array([]);
+
+        if (Array.isArray(multitabla.items)) {
+            for (const item of multitabla.items) {
+                this.items.push(this.fb.group({
+                    id: [item.id || null], // ahora sí se puede editar un item existente
+                    nombre: [item.nombre || '', Validators.required],
+                    valor: [item.valor || ''],
+                    valor2: [item.valor2 || '']
+                }));
+            }
+        }
+
         this.form = this.fb.group({
+            id: [multitabla.id || null],
             nombre: [multitabla.nombre || '', Validators.required],
-            icono: [multitabla.icono || '', Validators.required]
+            valor: [multitabla.valor || ''],
+            valor2: [multitabla.valor2 || ''],
+            items: this.items
         });
     }
+
 
     loadData() {
         this.multitablaService.findAll().subscribe({
@@ -144,9 +162,34 @@ export class MultitablasComponent implements OnInit {
 
     openEdit(multitabla: any) {
         this.multitabla = { ...multitabla };
-        this.buildForm(this.multitabla); // <- Aquí
+        this.findOne(this.multitabla.id); // Cargar los datos de la multitabla seleccionada
         this.multitablaDialog = true;
     }
+
+    findOne(id: number) {
+        this.multitablaService.findOne(id).subscribe({
+            next: (response) => {
+                if (response.ok && response.data) {
+                    this.buildForm({ id, ...response.data }); // data ya tiene nombre, valor, valor2, items
+                    this.multitablaDialog = true;
+                } else {
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'No se encontró el registro',
+                    });
+                }
+            },
+            error: (err) => {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'Error al obtener los datos',
+                });
+            }
+        });
+    }
+
 
 
     deleteSelectedMultitablas() {
@@ -182,59 +225,48 @@ export class MultitablasComponent implements OnInit {
         });
     }
 
-    hideDialog() {
-        this.multitablaDialog = false;
-        this.submitted = false;
+    get itemsArray(): FormArray {
+        return this.form.get('items') as FormArray;
     }
 
-    deleteMultitabla(multitabla: any) {
-        this.confirmationService.confirm({
-            message: '¿Estas seguro de eliminar esta multitabla ' + multitabla.nombre + '?',
-            header: 'Confirmar',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                this.multitablaService.delete(multitabla.id).subscribe({
-                    next: (res: StatusResponse<any>) => {
-                        if (res.ok && res.data) {
-                            this.multitablas.set(this.multitablas().filter((val) => val.id !== multitabla.id));
-                            this.multitabla = {};
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Multitablas Deleted',
-                                life: 3000
-                            });
-                        } else {
-                            this.errorToast(this.utils.normalizeMessages(res.message));
-                            console.warn(this.utils.normalizeMessages(res.message));
-                        }
-                    },
-                    error: (err) => {
-                        this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                        console.warn(this.utils.normalizeMessages(err?.error?.message));
-                    }
-                });
+    agregarItem() {
+        this.itemsArray.push(
+            this.fb.group({
+                id: [null], // nuevo item, sin id
+                nombre: ['', Validators.required],
+                valor: [''],
+                valor2: ['']
+            })
+        );
+    }
 
-            }
-        });
+
+    eliminarItem(index: number) {
+        this.itemsArray.removeAt(index);
+    }
+
+    hideDialog() {
+        this.form.reset();
+        this.itemsArray.clear();
+        this.multitablaDialog = false;
+        this.submitted = false;
     }
 
     saveUpdateMultitabla() {
         this.submitted = true;
         if (this.form.invalid) return;
 
-        const data = this.form.value;
+        const dto = { ...this.form.value };
 
-        if (this.multitabla.id) {
-            const updated = { ...this.multitabla, ...data };
-
-            this.multitablaService.update(updated.id, { nombre: updated.nombre, icono: updated.icono }).subscribe({
+        if (dto.id) {
+            // UPDATE
+            this.multitablaService.update(dto.id, dto).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.multitablas.set(
-                            this.multitablas().map(op => op.id === this.multitabla.id ? updated : op)
+                            this.multitablas().map(op => op.id === dto.id ? res.data : op)
                         );
-                        this.successToast('Multitabla actualizada correctamente');
+                        this.successToast(`Multitabla "${res.data.nombre}" actualizada correctamente`);
                     } else {
                         this.errorToast(this.utils.normalizeMessages(res.message));
                     }
@@ -243,29 +275,57 @@ export class MultitablasComponent implements OnInit {
                     this.errorToast(this.utils.normalizeMessages(err?.error?.message));
                 }
             });
-
         } else {
-            const newMultitabla = { ...data };
+            // CREATE
+            delete dto.id;
 
-            this.multitablaService.create(newMultitabla).subscribe({
+            this.multitablaService.create(dto).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.multitablas.set([...this.multitablas(), res.data]);
-                        this.successToast('Multitabla creada correctamente');
+                        this.successToast(`Multitabla "${res.data.nombre}" creada correctamente`);
                     } else {
                         this.errorToast(this.utils.normalizeMessages(res.message));
-                        console.warn(this.utils.normalizeMessages(res.message));
                     }
                 },
                 error: (err) => {
                     this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                    console.warn(this.utils.normalizeMessages(err?.error?.message));
                 }
             });
         }
 
         this.multitablaDialog = false;
     }
+
+
+
+
+    deleteMultitabla(multitabla: any) {
+        this.confirmationService.confirm({
+            message: `¿Estás seguro de eliminar la multitabla "${multitabla.nombre}"?`,
+            header: 'Confirmación',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                this.multitablaService.delete(multitabla.id).subscribe({
+                    next: (res: StatusResponse<null>) => {
+                        if (res.ok) {
+                            this.multitablas.set(
+                                this.multitablas().filter((val) => val.id !== multitabla.id)
+                            );
+                            this.multitabla = {};
+                            this.successToast('Multitabla eliminada correctamente');
+                        } else {
+                            this.errorToast(this.utils.normalizeMessages(res.message));
+                        }
+                    },
+                    error: (err) => {
+                        this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                    }
+                });
+            }
+        });
+    }
+
 
     private successToast(message: string) {
         this.messageService.add({

@@ -8,7 +8,7 @@ import { StatusResponse } from '../../../shared/interface/status-response.interf
   providedIn: 'root'
 })
 export class MultitablaService {
-  private readonly apiUrl = `${environment.apiUrlSecurity}/multitabla`;
+  private readonly apiUrl = `${environment.apiUrlBusinessparam}/multitabla`;
 
   private _loading = new BehaviorSubject<boolean>(false);
   public readonly loading$: Observable<boolean> = this._loading.asObservable();
