@@ -97,12 +97,12 @@ export class PersonasComponent implements OnInit {
 
     ngOnInit() {
         this.loadData();
-         this.getTipoDocumentos();
+        this.getTipoDocumentos();
         this.buildForm();
     }
 
 
-      getTipoDocumentos() {
+    getTipoDocumentos() {
         this.multitablaService.getTipoDocumento().subscribe({
             next: (res: StatusResponse<any>) => {
                 console.log(res);
@@ -126,7 +126,10 @@ export class PersonasComponent implements OnInit {
             apellido: [persona.apellido || '', Validators.required],
             idTipoDocumentoIdentidad: [persona.idTipoDocumentoIdentidad || null, Validators.required],
             documentoIdentidad: [persona.documentoIdentidad || '', Validators.required],
-            fechaNacimiento: [persona.fechaNacimiento || '', Validators.required],
+            fechaNacimiento: [
+                persona.fechaNacimiento ? new Date(persona.fechaNacimiento) : null,
+                Validators.required
+            ]
         });
     }
 
