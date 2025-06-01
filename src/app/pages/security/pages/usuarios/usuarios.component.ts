@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, signal, ViewChild } from "@angular/core";
 import { FormGroup, FormBuilder, Validators, FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { UsuarioDto } from "../../interfaces";
 import { PersonasService } from "../../services/personas.service";
@@ -18,7 +18,7 @@ import { RadioButtonModule } from "primeng/radiobutton";
 import { RatingModule } from "primeng/rating";
 import { RippleModule } from "primeng/ripple";
 import { SelectModule } from "primeng/select";
-import { TableModule } from "primeng/table";
+import { Table, TableModule } from "primeng/table";
 import { TagModule } from "primeng/tag";
 import { TextareaModule } from "primeng/textarea";
 import { ToastModule } from "primeng/toast";
@@ -30,6 +30,18 @@ import { StatusResponse } from "../../../../shared/interface/status-response.int
 import { ConfirmationService, MessageService } from "primeng/api";
 import { Observable } from "rxjs";
 import { PickListModule } from "primeng/picklist";
+import { MultitablaService } from "../../services/multitabla.service";
+import { DatePickerModule } from "primeng/datepicker";
+interface Column {
+    field: string;
+    header: string;
+    customExportHeader?: string;
+}
+
+interface ExportColumn {
+    title: string;
+    dataKey: string;
+}
 
 @Component({
     standalone: true,
@@ -56,59 +68,78 @@ import { PickListModule } from "primeng/picklist";
         InputSwitchModule,
         DropdownModule,
         PickListModule,
+        DatePickerModule,
         LoadingOverlayComponent],
     templateUrl: './usuarios.component.html',
-     styleUrls: ['./usuarios.component.scss'],
+    styleUrls: ['./usuarios.component.scss'],
     providers: [MessageService, ConfirmationService]
 })
 export class UsuariosComponent implements OnInit {
-    usuarios: UsuarioDto[] = [];
-    personas: any[] = []; // cargar desde un servicio
+    usuarioDialog: boolean = false;
+    usuarios = signal<any[]>([]);
+    usuario!: any;
+    selectedUsuarios!: any[] | null;
+    allRoles: any[] = []; // todos los roles posibles
     rolesDisponibles: any[] = []; // cargar desde servicio
     rolesAsignados: any[] = [];
-
     form!: FormGroup;
-    mostrarModal = false;
+    submitted: boolean = false;
     crearPersona = false;
-  loading$: Observable<boolean> = new Observable<boolean>( observer => observer.next(false)); // Observable boolean
+    @ViewChild('dt') dt!: Table;
+    exportColumns!: ExportColumn[];
+    tipoDocumentos: any[] = [];
+    personas: any[] = []; // cargar desde un servicio
+    loading$: Observable<boolean> = new Observable<boolean>(observer => observer.next(false)); // Observable boolean
     constructor(
         private fb: FormBuilder,
         private usuariosService: UsuariosService,
+        private multitablaService: MultitablaService,
         private personasService: PersonasService,
         private rolesService: RolesService,
         private utils: UtilsService, // Asegúrate de tener un servicio para manejar mensajes y utilidades
         private messageService: MessageService
     ) {
-          this.loading$ = this.usuariosService.loading$; // Observable boolean
+        this.loading$ = this.usuariosService.loading$; // Observable boolean
     }
 
     ngOnInit() {
         this.loadData();
+        this.getRoles();
+        this.getPersonas();
+        this.getTipoDocumentos();
         this.buildForm();
     }
-    buildForm() {
+    buildForm(usuario: any = {}) {
+        const persona = usuario.persona || {};
+
         this.form = this.fb.group({
-            login: ['', Validators.required],
-            password: ['', Validators.required],
-            idPersona: [null],
+            login: [usuario.login || '', Validators.required],
+            password: [usuario.password || '', Validators.required],
+            idPersona: [usuario?.idPersona || null],
             persona: this.fb.group({
-                nombre: [''],
-                apellido: [''],
-                idTipoDocumentoIdentidad: [null],
-                documentoIdentidad: [''],
-                fechaNacimiento: [null]
+                nombre: [persona.nombre || ''],
+                apellido: [persona.apellido || ''],
+                idTipoDocumentoIdentidad: [persona.idTipoDocumentoIdentidad ?? null],
+                documentoIdentidad: [persona.documentoIdentidad || ''],
+                fechaNacimiento: [
+                    persona.fechaNacimiento ? new Date(persona.fechaNacimiento) : null
+                ]
             }),
-            roles: [[]]
+            roles: [usuario.roles?.map((r: any) => r.id) || []]
         });
+        console.log('Formulario creado:', this.usuario);
+        this.rolesAsignados = usuario.roles || [];
+        this.rolesDisponibles = [...this.allRoles];
+        console.log('Usuario cargado:', this.rolesAsignados);
+        this.aplicarValidadoresDinamicos();
     }
 
-
-    loadData() {
-        this.rolesService.findAll().subscribe({
+    getTipoDocumentos() {
+        this.multitablaService.getTipoDocumento().subscribe({
             next: (res: StatusResponse<any>) => {
                 console.log(res);
                 if (res.ok && res.data) {
-                    this.rolesDisponibles = res.data;
+                    this.tipoDocumentos = res.data.items;
                 } else {
                     this.errorToast(this.utils.normalizeMessages(res.message));
                     console.warn(this.utils.normalizeMessages(res.message));
@@ -119,10 +150,59 @@ export class UsuariosComponent implements OnInit {
                 console.warn(this.utils.normalizeMessages(err?.error?.message));
             }
         });
+    }
 
+    aplicarValidadoresDinamicos() {
+        const personaGroup = this.form.get('persona') as FormGroup;
+        const idPersonaControl = this.form.get('idPersona');
+
+        if (this.crearPersona) {
+            // Activar validadores del grupo persona
+            personaGroup.get('nombre')?.setValidators(Validators.required);
+            personaGroup.get('apellido')?.setValidators(Validators.required);
+            personaGroup.get('idTipoDocumentoIdentidad')?.setValidators(Validators.required);
+            personaGroup.get('documentoIdentidad')?.setValidators(Validators.required);
+            personaGroup.get('fechaNacimiento')?.setValidators(Validators.required);
+            // Limpiar idPersona
+            idPersonaControl?.clearValidators();
+        } else {
+            // Limpiar validadores de persona
+            Object.values(personaGroup.controls).forEach((control) => {
+                control.clearValidators();
+                control.updateValueAndValidity();
+            });
+            // Activar validador solo para idPersona
+            idPersonaControl?.setValidators(Validators.required);
+        }
+
+        personaGroup.updateValueAndValidity();
+        idPersonaControl?.updateValueAndValidity();
+    }
+
+    get personaForm(): FormGroup {
+        return this.form.get('persona') as FormGroup;
+    }
+
+    getRoles() {
+        this.rolesService.findAll().subscribe({
+            next: (res: StatusResponse<any>) => {
+                if (res.ok && res.data) {
+                    this.allRoles = res.data;
+                    console.log('rolesDisponibles:', this.rolesDisponibles);
+                } else {
+                    this.errorToast(this.utils.normalizeMessages(res.message));
+                    console.warn(this.utils.normalizeMessages(res.message));
+                }
+            },
+            error: (err) => {
+                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                console.warn(this.utils.normalizeMessages(err?.error?.message));
+            }
+        });
+    }
+    getPersonas() {
         this.personasService.findAll().subscribe({
             next: (res: StatusResponse<any>) => {
-                console.log(res);
                 if (res.ok && res.data) {
                     this.personas = res.data;
                 } else {
@@ -135,15 +215,13 @@ export class UsuariosComponent implements OnInit {
                 console.warn(this.utils.normalizeMessages(err?.error?.message));
             }
         });
-        this.cargarUsuarios();
     }
 
-    cargarUsuarios() {
+    loadData() {
         this.usuariosService.findAll().subscribe({
             next: (res: StatusResponse<any>) => {
-                console.log(res);
                 if (res.ok && res.data) {
-                    this.usuarios = res.data;
+                    this.usuarios.set(res.data);
                 } else {
                     this.errorToast(this.utils.normalizeMessages(res.message));
                     console.warn(this.utils.normalizeMessages(res.message));
@@ -156,55 +234,98 @@ export class UsuariosComponent implements OnInit {
         });
     }
 
-    abrirModal() {
-        this.form = this.fb.group({
-            login: ['', Validators.required],
-            password: ['', Validators.required],
-            idPersona: [null],
-            persona: this.fb.group({
-                nombre: [''],
-                apellido: ['']
-            }),
-            roles: [[]]
-        });
-        this.crearPersona = false;
-        this.rolesAsignados = [];
-        this.mostrarModal = true;
+    openNew() {
+        this.usuario = {};
+        this.submitted = false;
+        this.buildForm(); // <- Aquí
+        this.usuarioDialog = true;
     }
 
-    togglePersona() {
+    openEdit(usuario: any) {
+        this.usuario = { ...usuario };
+        this.buildForm(this.usuario); // <- Aquí
+        this.usuarioDialog = true;
+    }
+
+    togglePersona(event: Event) {
+        const input = event.target as HTMLInputElement;
+        this.crearPersona = input.checked;
+
+        // Si quieres limpiar datos al activar o desactivar
         if (this.crearPersona) {
-            this.form.get('idPersona')?.setValue(null);
+            this.form.get('idPersona')?.reset();
         } else {
             this.form.get('persona')?.reset();
         }
+        this.aplicarValidadoresDinamicos();
     }
 
-    actualizarRoles() {
-        const ids = this.rolesAsignados.map(r => r.id);
-        this.form.patchValue({ roles: ids });
+    onAsignarRoles(event: any) {
+        this.form.get('roles')?.setValue(this.rolesAsignados.map(r => r.id));
+        this.form.get('roles')?.markAsTouched();
     }
 
-    guardar() {
+    onQuitarRoles(event: any) {
+        this.form.get('roles')?.setValue(this.rolesAsignados.map(r => r.id));
+        this.form.get('roles')?.markAsTouched();
+    }
+
+
+    saveUpdateUsuario() {
+        console.log('Guardando usuario:', this.form.value);
+        this.submitted = true;
+        console.log('Errores del formulario:', this.form.errors);
+        console.log('Controles individuales:', this.form.controls);
         if (this.form.invalid) return;
+        console.log('Formulario válido, guardando usuario:', this.form.value);
+        const dto = { ...this.form.value };
 
-        const data = this.form.value;
-        if (!this.crearPersona) {
-            delete data.persona;
+        if (dto.id) {
+            // UPDATE
+            // this.usuariosService.update(dto.id, dto).subscribe({
+            //     next: (res) => {
+            //         if (res.ok && res.data) {
+            //             this.usuarios.set(
+            //                 this.multitablas().map(op => op.id === dto.id ? res.data : op)
+            //             );
+            //             this.successToast(`Multitabla "${res.data.nombre}" actualizada correctamente`);
+            //         } else {
+            //             this.errorToast(this.utils.normalizeMessages(res.message));
+            //         }
+            //     },
+            //     error: (err) => {
+            //         this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+            //     }
+            // });
         } else {
-            delete data.idPersona;
+            // CREATE
+            delete dto.id;
+
+            this.usuariosService.create(dto).subscribe({
+                next: (res) => {
+                    if (res.ok && res.data) {
+                        this.usuarios.set([...this.usuarios(), res.data]);
+                        this.successToast(`Usuario "${res.data.nombre}" creada correctamente`);
+                    } else {
+                        this.errorToast(this.utils.normalizeMessages(res.message));
+                    }
+                },
+                error: (err) => {
+                    this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                }
+            });
         }
 
-        this.usuariosService.create(data).subscribe(res => {
-            if (res.ok) {
-                this.mostrarModal = false;
-                this.cargarUsuarios();
-            }
-        });
+        this.usuarioDialog = false;
     }
 
     abrirAsignarRoles(usuario: UsuarioDto) {
         // Lo vemos si deseas implementar edición desde modal aparte
+    }
+
+    hideDialog() {
+        this.usuarioDialog = false;
+        this.submitted = false;
     }
 
     private successToast(message: string) {
@@ -224,6 +345,9 @@ export class UsuariosComponent implements OnInit {
             detail,
             life: 5000
         });
+    }
+
+    deleteUsuario(usuario: any) {
     }
 
 }

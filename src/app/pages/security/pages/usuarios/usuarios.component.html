@@ -1,88 +1,148 @@
 <div class="card">
-  <div class="flex justify-between items-center mb-3">
-    <h2>Usuarios</h2>
-    <p-button label="Nuevo Usuario" icon="pi pi-plus" (click)="abrirModal()" />
-  </div>
+    <div class="flex justify-between items-center mb-3">
+        <h2>Usuarios</h2>
+        <p-button label="Nuevo Usuario" icon="pi pi-plus" (click)="openNew()" />
+    </div>
 
-  <p-table [value]="usuarios" [paginator]="true" [rows]="10">
-    <ng-template pTemplate="header">
-      <tr>
-        <th>Login</th>
-        <th>Nombre</th>
-        <th>Roles</th>
-        <th>Acciones</th>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-usuario>
-      <tr>
-        <td>{{ usuario.login }}</td>
-        <td>{{ usuario.persona?.nombre }} {{ usuario.persona?.apellido }}</td>
-        <td>
-          <p-tag *ngFor="let rol of usuario.roles" [value]="rol.nombre" class="mr-1" />
-        </td>
-        <td>
-          <p-button icon="pi pi-user-edit" label="Asignar Roles" (click)="abrirAsignarRoles(usuario)" />
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
+    <p-table #dt [value]="usuarios()" [paginator]="true" [rows]="10" [tableStyle]="{ 'min-width': '60rem' }"
+            [rowHover]="true" [rowsPerPageOptions]="[10, 20, 30]" [globalFilterFields]="['nombre', 'icono']"
+            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} usuarios"
+            [(selection)]="selectedUsuarios" dataKey="id">
+               <ng-template #header>
+                <tr>
+                    <th style="width: 3rem">
+                        <p-tableHeaderCheckbox />
+                    </th>
+                    <th pSortableColumn="nombre">Login <p-sortIcon field="login" /></th>
+                    <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
+                    <th>Acciones</th>
+                </tr>
+            </ng-template>
+
+            <ng-template #body let-usuario>
+                <tr>
+                    <td>{{ usuario.login }}</td>
+                    <td>{{ usuario.persona?.nombre }} {{ usuario.persona?.apellido }}</td>
+                    <td>
+                        <p-tag *ngFor="let rol of usuario.roles" [value]="rol.nombre" class="mr-1" />
+                    </td>
+                    <td>
+                         <p-button icon="pi pi-user-edit" label="Asignar Roles" (click)="abrirAsignarRoles(usuario)" />
+                        <p-button icon="pi pi-pencil" severity="info" rounded outlined class="mr-2"
+                            (click)="openEdit(usuario)" />
+                        <p-button icon="pi pi-trash" severity="danger" rounded outlined
+                            (click)="deleteUsuario(usuario)" />
+                    </td>
+                </tr>
+            </ng-template>
+    </p-table>
 </div>
 
 <!-- MODAL CREACIÓN -->
-<p-dialog header="Nuevo Usuario" [(visible)]="mostrarModal" [modal]="true" [style]="{ width: '600px' }">
-  <form [formGroup]="form" (ngSubmit)="guardar()">
-    <div class="field">
-      <label>Login</label>
-      <input pInputText formControlName="login" />
-    </div>
+<p-dialog header="Usuario" [(visible)]="usuarioDialog" [modal]="true" [style]="{ width: '750px' }">
+    <ng-template #content>
+        <form [formGroup]="form">
+            <div class="flex flex-col gap-6">
+                <div>
+                    <label class="block font-bold mb-2">Login</label>
+                    <input pInputText formControlName="login" class="w-full" />
+                </div>
 
-    <div class="field">
-      <label>Password</label>
-      <input pPassword formControlName="password" toggleMask="true" />
-    </div>
+                <div>
+                    <label class="block font-bold mb-2">Password</label>
+                    <input pInputText formControlName="password" class="w-full" toggleMask="true" />
+                </div>
 
-    <div class="field">
-      <label>
-        <input type="checkbox" [(ngModel)]="crearPersona" (change)="togglePersona()" />
-        ¿Crear nueva persona?
-      </label>
-    </div>
+                <div>
+                    <label>
+                        <input type="checkbox" [checked]="crearPersona" (change)="togglePersona($event)" />
+                        ¿Crear nueva persona?
+                    </label>
+                </div>
 
-    <div *ngIf="crearPersona">
-      <div class="field">
-        <label>Nombre</label>
-        <input pInputText formControlName="persona.nombre" />
-      </div>
-      <div class="field">
-        <label>Apellido</label>
-        <input pInputText formControlName="persona.apellido" />
-      </div>
-    </div>
+                <div [hidden]="!crearPersona" [formGroup]="personaForm">
+                    <!-- Nombre -->
+                    <div>
+                        <label for="nombre" class="block font-bold mb-2">Nombre</label>
+                        <input id="nombre" type="text" class="w-full" pInputText formControlName="nombre" />
+                        <small class="text-red-500" *ngIf="submitted && personaForm.get('nombre')?.invalid">
+                            El nombre es obligatorio.
+                        </small>
+                    </div>
 
-    <div *ngIf="!crearPersona">
-      <label>Persona existente</label>
-      <p-dropdown [options]="personas" optionLabel="nombre" optionValue="id" formControlName="idPersona" />
-    </div>
+                    <!-- Apellido -->
+                    <div>
+                        <label for="apellido" class="block font-bold mb-2">Apellido</label>
+                        <input id="apellido" type="text" class="w-full" pInputText formControlName="apellido" />
+                        <small class="text-red-500" *ngIf="submitted && personaForm.get('apellido')?.invalid">
+                            El apellido es obligatorio.
+                        </small>
+                    </div>
 
-    <div class="field">
-      <label>Roles</label>
-      <p-pickList
-        [source]="rolesDisponibles"
-        [target]="rolesAsignados"
-        optionLabel="nombre"
-        sourceHeader="Disponibles"
-        targetHeader="Asignados"
-        dragdrop="true"
-        (onMoveToTarget)="actualizarRoles()"
-        (onMoveToSource)="actualizarRoles()"
-      ></p-pickList>
-    </div>
+                    <!-- Tipo de Documento -->
+                    <div>
+                        <label for="idTipoDocumentoIdentidad" class="block font-bold mb-2">Tipo de Documento</label>
+                        <p-dropdown id="idTipoDocumentoIdentidad" formControlName="idTipoDocumentoIdentidad"
+                            [options]="tipoDocumentos" optionLabel="nombre" optionValue="id"
+                            placeholder="Seleccione un Tipo de Documento" class="w-full" />
+                        <small class="text-red-500"
+                            *ngIf="submitted && personaForm.get('idTipoDocumentoIdentidad')?.invalid">
+                            El tipo de documento es obligatorio.
+                        </small>
+                    </div>
 
-    <p-footer>
-      <p-button label="Cancelar" icon="pi pi-times" (click)="mostrarModal = false" class="p-button-text" />
-      <p-button label="Guardar" icon="pi pi-check" type="submit" />
-    </p-footer>
-  </form>
+                    <!-- Documento de Identidad -->
+                    <div>
+                        <label for="documentoIdentidad" class="block font-bold mb-2">Documento de Identidad</label>
+                        <input id="documentoIdentidad" type="text" class="w-full" pInputText
+                            formControlName="documentoIdentidad" />
+                        <small class="text-red-500" *ngIf="submitted && personaForm.get('documentoIdentidad')?.invalid">
+                            El documento de identidad es obligatorio.
+                        </small>
+                    </div>
+
+                    <!-- Fecha de Nacimiento -->
+                    <div>
+                        <label for="fechaNacimiento" class="block font-bold mb-2">Fecha de Nacimiento</label>
+                        <p-datepicker [showIcon]="true" [showButtonBar]="true" formControlName="fechaNacimiento"
+                            class="w-full" />
+                        <small class="text-red-500" *ngIf="submitted && personaForm.get('fechaNacimiento')?.invalid">
+                            La fecha de nacimiento es obligatoria.
+                        </small>
+                    </div>
+                </div>
+
+                <div [hidden]="crearPersona">
+                    <label class="block font-bold mb-2">Persona existente</label>
+                    <p-dropdown placeholder="Seleccione una persona existente" [options]="personas" optionLabel="nombre"
+                        optionValue="id" formControlName="idPersona"></p-dropdown>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block font-bold mb-2">Roles</label>
+                    <div class="card px-0" style="padding-left: 0px;padding-right: 0px;">
+                        <p-pickList [source]="rolesDisponibles" [target]="rolesAsignados" optionLabel="nombre"
+                            [responsive]="true" breakpoint="750px" dragdrop="true" [metaKeySelection]="false"
+                            sourceHeader="Roles" targetHeader="Asignados"
+                             (onMoveToTarget)="onAsignarRoles($event)"
+  (onMoveToSource)="onQuitarRoles($event)">
+                            <ng-template let-item pTemplate="item">
+                                {{ item.nombre }}
+                            </ng-template>
+                        </p-pickList>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </form>
+    </ng-template>
+    <ng-template #footer>
+        <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
+        <p-button label="Guardar" icon="pi pi-check" (click)="saveUpdateUsuario()" />
+    </ng-template>
+
 </p-dialog>
 
 <p-toast position="top-right"></p-toast>
