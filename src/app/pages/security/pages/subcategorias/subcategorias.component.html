@@ -1,0 +1,84 @@
+<div class="card !mb-8">
+    <div class="card-header">
+        <div class="flex items-center justify-between">
+            <h1 class="font-semibold text-xl mb-0">Subcategorias</h1>
+            <div>
+                <p-button label="Nuevo" icon="pi pi-plus" severity="success" class="mr-2" (click)="openNew()" />
+                <p-button label="Exportar" icon="pi pi-upload" severity="secondary" (click)="exportCSV()" />
+            </div>
+        </div>
+        <hr>
+    </div>
+
+    <div class="card-body">
+
+        <div class="flex w-full items-center flex-wrap justify-between py-3">
+            <p-iconfield>
+                <p-inputicon styleClass="pi pi-search" />
+                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Buscar..." />
+            </p-iconfield>
+
+            <p-button severity="danger" label="Eliminar" icon="pi pi-trash" outlined (click)="deleteSelectedSubcategorias()"
+                [disabled]="!selectedSubcategorias?.length" />
+        </div>
+
+        <p-table #dt [value]="subcategoria()" [paginator]="true" [rows]="10" [tableStyle]="{ 'min-width': '60rem' }"
+            [rowHover]="true" [rowsPerPageOptions]="[10, 20, 30]" [globalFilterFields]="['nombre', 'path']"
+            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} subcategoria"
+            [(selection)]="selectedSubcategorias" dataKey="id">
+
+            <ng-template #header>
+                <tr>
+                    <th style="width: 3rem">
+                        <p-tableHeaderCheckbox />
+                    </th>
+                    <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
+                    <th>Subcategorias</th>
+                </tr>
+            </ng-template>
+
+            <ng-template #body let-subsubcategoria>
+                <tr>
+                    <td><p-tableCheckbox [value]="subsubcategoria" /></td>
+                    <td>{{ subsubcategoria.nombre }}</td>
+                    <td>
+                        <p-button icon="pi pi-pencil" severity="info" rounded outlined class="mr-2"
+                            (click)="openEdit(subsubcategoria)" />
+                        <p-button icon="pi pi-trash" severity="danger" rounded outlined
+                            (click)="deleteBanco(subsubcategoria)" />
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+
+    </div>
+</div>
+
+
+<p-dialog [(visible)]="subsubcategoriaDialog" [style]="{ width: '450px' }" header="Detalle de Opción" [modal]="true"
+    [draggable]="false">
+    <ng-template #content>
+        <form [formGroup]="form">
+            <div class="flex flex-col gap-6">
+                <div>
+                    <label for="nombre" class="block font-bold mb-2">Nombre</label>
+                    <input id="nombre" type="text" class="w-full" pInputText formControlName="nombre" />
+                    <small class="text-red-500" *ngIf="submitted && form.get('nombre')?.invalid">
+                        El nombre es obligatorio.
+                    </small>
+                </div>
+
+            </div>
+        </form>
+    </ng-template>
+
+    <ng-template #footer>
+        <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
+        <p-button label="Guardar" icon="pi pi-check" (click)="saveUpdateBanco()" />
+    </ng-template>
+</p-dialog>
+<p-toast position="top-right"></p-toast>
+<p-confirmdialog [style]="{ width: '450px' }" />
+
+
+<app-loading-overlay [loading]="(loading$ | async) ?? false" />
