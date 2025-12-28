@@ -1,3 +1,4 @@
+import { Persona } from './interfaces/persona.interface';
 import { MultitablaService } from './../../services/multitabla.service';
 import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -72,9 +73,9 @@ interface ExportColumn {
 })
 export class PersonasComponent implements OnInit {
     personaDialog: boolean = false;
-    personas = signal<any[]>([]);
-    persona!: any;
-    selectedPersonas!: any[] | null;
+    personas = signal<Persona[]>([]);
+    persona!: Persona;
+    selectedPersonas!: Persona[] | null;
     submitted: boolean = false;
     statuses!: any[];
     @ViewChild('dt') dt!: Table;
@@ -100,57 +101,6 @@ export class PersonasComponent implements OnInit {
         this.getTipoDocumentos();
         this.buildForm();
     }
-
-
-    getTipoDocumentos() {
-        this.multitablaService.getTipoDocumento().subscribe({
-            next: (res: StatusResponse<any>) => {
-                console.log(res);
-                if (res.ok && res.data) {
-                    this.tipoDocumentos = res.data.items;
-                } else {
-                    this.errorToast(this.utils.normalizeMessages(res.message));
-                    console.warn(this.utils.normalizeMessages(res.message));
-                }
-            },
-            error: (err) => {
-                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                console.warn(this.utils.normalizeMessages(err?.error?.message));
-            }
-        });
-    }
-
-    buildForm(persona: any = {}) {
-        this.form = this.fb.group({
-            nombre: [persona.nombre || '', Validators.required],
-            apellido: [persona.apellido || '', Validators.required],
-            idTipoDocumentoIdentidad: [persona.idTipoDocumentoIdentidad || null, Validators.required],
-            documentoIdentidad: [persona.documentoIdentidad || '', Validators.required],
-            fechaNacimiento: [
-                persona.fechaNacimiento ? new Date(persona.fechaNacimiento) : null,
-                Validators.required
-            ]
-        });
-    }
-
-    getDocumentosIdentidad() {
-        // this.modulosService.findAll().subscribe({
-        //     next: (res: StatusResponse<any>) => {
-        //         console.log(res);
-        //         if (res.ok && res.data) {
-        //             this.modulos = res.data;
-        //         } else {
-        //             this.errorToast(this.utils.normalizeMessages(res.message));
-        //             console.warn(this.utils.normalizeMessages(res.message));
-        //         }
-        //     },
-        //     error: (err) => {
-        //         this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-        //         console.warn(this.utils.normalizeMessages(err?.error?.message));
-        //     }
-        // });
-    }
-
 
     loadData() {
         this.personasService.findAll().subscribe({
@@ -179,6 +129,26 @@ export class PersonasComponent implements OnInit {
         // this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
     }
 
+
+    getTipoDocumentos() {
+        this.multitablaService.getTipoDocumento().subscribe({
+            next: (res: StatusResponse<any>) => {
+                console.log(res);
+                if (res.ok && res.data) {
+                    this.tipoDocumentos = res.data.items;
+                } else {
+                    this.errorToast(this.utils.normalizeMessages(res.message));
+                    console.warn(this.utils.normalizeMessages(res.message));
+                }
+            },
+            error: (err) => {
+                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                console.warn(this.utils.normalizeMessages(err?.error?.message));
+            }
+        });
+    }
+
+
     exportCSV() {
         // this.dt.exportCSV();
     }
@@ -188,87 +158,39 @@ export class PersonasComponent implements OnInit {
     }
 
     openNew() {
-        this.persona = {};
+        this.persona = {} as Persona;
         this.submitted = false;
         this.buildForm(); // <- Aquí
         this.personaDialog = true;
     }
 
-    openEdit(persona: any) {
+    openEdit(persona: Persona) {
         this.persona = { ...persona };
-        this.buildForm(this.persona); // <- Aquí
+        this.buildForm(this.persona);
         this.personaDialog = true;
     }
 
-
-    deleteSelectedPersonas() {
-        this.confirmationService.confirm({
-            message: '¿Estas seguro de eliminar las personas seleccionadas?',
-            header: 'Confirmar',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                const idsToDelete = this.selectedPersonas?.map(persona => persona.id) || [];
-                this.personasService.deleteMany(idsToDelete).subscribe({
-                    next: (response: StatusResponse<any>) => {
-                        if (response.ok && response.data) {
-                            console.log(response);
-                            this.personas.set(this.personas().filter((val) => !this.selectedPersonas?.includes(val)));
-                            this.selectedPersonas = null;
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Personas Deleted',
-                                life: 3000
-                            });
-                        } else {
-                            console.warn(this.utils.normalizeMessages(response.message));
-                        }
-                    },
-                    error: (err) => {
-                        console.warn(this.utils.normalizeMessages(err?.error?.message));
-                    }
-                });
-
-
-            }
+    buildForm(persona: Partial<Persona> = {}) {
+        this.form = this.fb.group({
+            nombre: [persona.nombre || '', Validators.required],
+            apellido: [persona.apellido || '', Validators.required],
+            idTipoDocumentoIdentidad: [(persona.tipoDocumento ? persona.tipoDocumento.idTipoDocumentoIdentidad : null),
+            Validators.required
+            ],
+            documentoIdentidad: [persona.documentoIdentidad || '', Validators.required],
+            fechaNacimiento: [
+                persona.fechaNacimiento ? new Date(persona.fechaNacimiento) : null,
+                Validators.required
+            ]
         });
     }
+
+
+
 
     hideDialog() {
         this.personaDialog = false;
         this.submitted = false;
-    }
-
-    deletePersona(persona: any) {
-        this.confirmationService.confirm({
-            message: '¿Estas seguro de eliminar esta persona ' + persona.nombre + '?',
-            header: 'Confirmar',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                this.personasService.delete(persona.id).subscribe({
-                    next: (res: StatusResponse<any>) => {
-                        if (res.ok && res.data) {
-                            this.personas.set(this.personas().filter((val) => val.id !== persona.id));
-                            this.persona = {};
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Personas Deleted',
-                                life: 3000
-                            });
-                        } else {
-                            this.errorToast(this.utils.normalizeMessages(res.message));
-                            console.warn(this.utils.normalizeMessages(res.message));
-                        }
-                    },
-                    error: (err) => {
-                        this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                        console.warn(this.utils.normalizeMessages(err?.error?.message));
-                    }
-                });
-
-            }
-        });
     }
 
     saveUpdatePersona() {
@@ -292,7 +214,7 @@ export class PersonasComponent implements OnInit {
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.personas.set(
-                            this.personas().map(op => op.id === this.persona.id ? updated : op)
+                            this.personas().map(op => op.id === this.persona.id ? res.data : op)
                         );
                         this.successToast('Opción actualizada correctamente');
                     } else {
@@ -326,6 +248,64 @@ export class PersonasComponent implements OnInit {
 
         this.personaDialog = false;
     }
+
+    deletePersona(persona: Persona) {
+        this.confirmationService.confirm({
+            message: '¿Estas seguro de eliminar esta persona ' + persona.nombre + '?',
+            header: 'Confirmar',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                this.personasService.delete(persona.id).subscribe({
+                    next: (res: StatusResponse<any>) => {
+                        if (res.ok) {
+                            // Si res.data es null, igual eliminamos por persona.id
+                            const idToRemove = persona.id;
+                            this.personas.set(this.personas().filter((val) => val.id !== idToRemove));
+                            this.persona = {} as Persona;
+                            this.successToast('Persona Eliminada');
+                        } else {
+                            this.errorToast(this.utils.normalizeMessages(res.message));
+                            console.warn(this.utils.normalizeMessages(res.message));
+                        }
+                    },
+                    error: (err) => {
+                        this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                        console.warn(this.utils.normalizeMessages(err?.error?.message));
+                    }
+                });
+            }
+        });
+    }
+
+    deleteSelectedPersonas() {
+        this.confirmationService.confirm({
+            message: '¿Estás seguro de eliminar las personas seleccionadas?',
+            header: 'Confirmar',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                const idsToDelete = this.selectedPersonas?.map(persona => persona.id) || [];
+                this.personasService.deleteMany(idsToDelete).subscribe({
+                    next: (response: StatusResponse<any>) => {
+                        if (response.ok && response.data) {
+                            console.log(response);
+                            this.personas.set(this.personas().filter((val) => !this.selectedPersonas?.includes(val)));
+                            this.selectedPersonas = null;
+                            this.successToast('Personas Eliminadas');
+                        } else {
+                            console.warn(this.utils.normalizeMessages(response.message));
+                        }
+                    },
+                    error: (err) => {
+                        console.warn(this.utils.normalizeMessages(err?.error?.message));
+                    }
+                });
+
+
+            }
+        });
+    }
+
+
 
     private successToast(message: string) {
         this.messageService.add({
