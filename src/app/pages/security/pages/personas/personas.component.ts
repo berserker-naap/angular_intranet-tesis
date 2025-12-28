@@ -1,3 +1,5 @@
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
 import { Persona } from './interfaces/persona.interface';
 import { MultitablaService } from './../../services/multitabla.service';
 import { Component, OnInit, signal, ViewChild } from '@angular/core';
@@ -28,16 +30,6 @@ import { Observable } from 'rxjs';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 import { DropdownModule } from 'primeng/dropdown';
 import { DatePickerModule } from 'primeng/datepicker';
-interface Column {
-    field: string;
-    header: string;
-    customExportHeader?: string;
-}
-
-interface ExportColumn {
-    title: string;
-    dataKey: string;
-}
 
 @Component({
     selector: 'app-personas',
@@ -79,8 +71,6 @@ export class PersonasComponent implements OnInit {
     submitted: boolean = false;
     statuses!: any[];
     @ViewChild('dt') dt!: Table;
-    exportColumns!: ExportColumn[];
-    cols!: Column[];
     form!: FormGroup;
     loading$: Observable<boolean> = new Observable<boolean>(observer => observer.next(false)); // Observable boolean
 
@@ -119,14 +109,6 @@ export class PersonasComponent implements OnInit {
             }
         });
 
-        // this.cols = [
-        //     { field: 'Nombre', header: 'Name' },
-        //     { field: 'image', header: 'Image' },
-        //     { field: 'price', header: 'Price' },
-        //     { field: 'category', header: 'Category' }
-        // ];
-
-        // this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
     }
 
 
@@ -149,8 +131,25 @@ export class PersonasComponent implements OnInit {
     }
 
 
-    exportCSV() {
-        // this.dt.exportCSV();
+    exportExcel() {
+        // Generar datos planos para exportar
+        const exportData = this.personas().map(persona => ({
+            Nombre: persona.nombre,
+            Apellido: persona.apellido,
+            'Tipo Doc.': persona.tipoDocumento?.valor ?? '',
+            'Documento de Identidad': persona.documentoIdentidad
+        }));
+        const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook: XLSX.WorkBook = { Sheets: { 'Personas': worksheet }, SheetNames: ['Personas'] };
+        const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        this.saveAsExcelFile(excelBuffer, 'personas');
+    }
+
+    saveAsExcelFile(buffer: any, fileName: string): void {
+        const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+        const EXCEL_EXTENSION = '.xlsx';
+        const data: Blob = new Blob([buffer], { type: EXCEL_TYPE });
+        FileSaver.saveAs(data, fileName + '_export_' + new Date().getTime() + EXCEL_EXTENSION);
     }
 
     onGlobalFilter(table: Table, event: Event) {
@@ -184,9 +183,6 @@ export class PersonasComponent implements OnInit {
             ]
         });
     }
-
-
-
 
     hideDialog() {
         this.personaDialog = false;
