@@ -282,9 +282,10 @@ export class PersonasComponent implements OnInit {
                 const idsToDelete = this.selectedPersonas?.map(persona => persona.id) || [];
                 this.personasService.deleteMany(idsToDelete).subscribe({
                     next: (response: StatusResponse<any>) => {
-                        if (response.ok && response.data) {
-                            console.log(response);
-                            this.personas.set(this.personas().filter((val) => !this.selectedPersonas?.includes(val)));
+                        if (response.ok) {
+                            this.personas.set(
+                                this.personas().filter((val) => !idsToDelete.includes(val.id))
+                            );
                             this.selectedPersonas = null;
                             this.successToast('Personas Eliminadas');
                         } else {
