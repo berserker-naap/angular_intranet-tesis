@@ -6,7 +6,7 @@ export interface MultitablaItem {
 }
 
 export interface Multitabla {
-  id?: number;
+  id: number;
   nombre: string;
   valor?: string | null;
   valor2?: string | null;

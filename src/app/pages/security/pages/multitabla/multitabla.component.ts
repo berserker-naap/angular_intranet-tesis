@@ -27,16 +27,6 @@ import { MultitablaService } from '../../services/multitabla.service';
 import { Multitabla, MultitablaItem } from './interfaces/multitabla.interface';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
-interface Column {
-    field: string;
-    header: string;
-    customExportHeader?: string;
-}
-
-interface ExportColumn {
-    title: string;
-    dataKey: string;
-}
 
 @Component({
     selector: 'app-multitabla',
@@ -270,7 +260,6 @@ export class MultitablaComponent implements OnInit {
             });
         } else {
             // CREATE
-            delete dto.id;
             this.multitablaService.create(dto).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
