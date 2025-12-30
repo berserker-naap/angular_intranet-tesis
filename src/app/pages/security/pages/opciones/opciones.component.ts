@@ -26,16 +26,8 @@ import { ModulosService } from '../../services/modulos.service';
 import { DropdownModule } from 'primeng/dropdown';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 import { Observable } from 'rxjs';
-interface Column {
-    field: string;
-    header: string;
-    customExportHeader?: string;
-}
-
-interface ExportColumn {
-    title: string;
-    dataKey: string;
-}
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
 
 @Component({
     selector: 'app-opciones',
@@ -75,12 +67,9 @@ export class OpcionesComponent implements OnInit {
     opcion!: any;
     selectedOpciones!: any[] | null;
     submitted: boolean = false;
-    statuses!: any[];
     @ViewChild('dt') dt!: Table;
-    exportColumns!: ExportColumn[];
-    cols!: Column[];
     form!: FormGroup;
-    loading$: Observable<boolean> = new Observable<boolean>( observer => observer.next(false)); // Observable boolean
+    loading$: Observable<boolean> = new Observable<boolean>(observer => observer.next(false)); // Observable boolean
     constructor(
         private modulosService: ModulosService,
         private opcionesService: OpcionesService,
@@ -89,8 +78,8 @@ export class OpcionesComponent implements OnInit {
         private confirmationService: ConfirmationService,
         private fb: FormBuilder,
     ) {
-         this.loading$ = this.opcionesService.loading$; // Observable boolean
-     }
+        this.loading$ = this.opcionesService.loading$; // Observable boolean
+    }
 
     ngOnInit() {
         this.loadData();
@@ -116,12 +105,10 @@ export class OpcionesComponent implements OnInit {
                     this.modulos = res.data;
                 } else {
                     this.errorToast(this.utils.normalizeMessages(res.message));
-                    console.warn(this.utils.normalizeMessages(res.message));
                 }
             },
             error: (err) => {
                 this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                console.warn(this.utils.normalizeMessages(err?.error?.message));
             }
         });
     }
@@ -135,29 +122,35 @@ export class OpcionesComponent implements OnInit {
                     this.opciones.set(res.data);
                 } else {
                     this.errorToast(this.utils.normalizeMessages(res.message));
-                    console.warn(this.utils.normalizeMessages(res.message));
                 }
             },
             error: (err) => {
                 this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                console.warn(this.utils.normalizeMessages(err?.error?.message));
             }
         });
-
-        // this.cols = [
-        //     { field: 'Nombre', header: 'Name' },
-        //     { field: 'image', header: 'Image' },
-        //     { field: 'price', header: 'Price' },
-        //     { field: 'category', header: 'Category' }
-        // ];
-
-        // this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
     }
 
-    exportCSV() {
-        // this.dt.exportCSV();
+
+    exportExcel() {
+        // Generar datos planos para exportar
+        const exportData = this.opciones().map(opcion => ({
+            Modulo: opcion.modulo?.nombre ?? '',
+            Opcion: opcion.nombre,
+            Path: opcion.path,
+            'Viosible en navegación': opcion.isVisibleNavegacion ? 'Sí' : 'No'
+        }));
+        const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook: XLSX.WorkBook = { Sheets: { 'Opciones': worksheet }, SheetNames: ['Opciones'] };
+        const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        this.saveAsExcelFile(excelBuffer, 'opciones');
     }
 
+    saveAsExcelFile(buffer: any, fileName: string): void {
+        const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+        const EXCEL_EXTENSION = '.xlsx';
+        const data: Blob = new Blob([buffer], { type: EXCEL_TYPE });
+        FileSaver.saveAs(data, fileName + '_export_' + new Date().getTime() + EXCEL_EXTENSION);
+    }
     onGlobalFilter(table: Table, event: Event) {
         table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
     }
@@ -176,6 +169,12 @@ export class OpcionesComponent implements OnInit {
     }
 
 
+    hideDialog() {
+        this.opcionDialog = false;
+        this.submitted = false;
+    }
+
+
     deleteSelectedOpciones() {
         this.confirmationService.confirm({
             message: '¿Estas seguro de eliminar las opciones seleccionadas?',
@@ -185,22 +184,17 @@ export class OpcionesComponent implements OnInit {
                 const idsToDelete = this.selectedOpciones?.map(opcion => opcion.id) || [];
                 this.opcionesService.deleteMany(idsToDelete).subscribe({
                     next: (response: StatusResponse<any>) => {
-                        if (response.ok && response.data) {
+                        if (response.ok) {
                             console.log(response);
-                            this.opciones.set(this.opciones().filter((val) => !this.selectedOpciones?.includes(val)));
+                            this.opciones.set(this.opciones().filter((val) => !idsToDelete.includes(val.id)));
                             this.selectedOpciones = null;
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Opciones Deleted',
-                                life: 3000
-                            });
+                            this.successToast('Opciones eliminadas correctamente');
                         } else {
-                            console.warn(this.utils.normalizeMessages(response.message));
+                            this.errorToast(this.utils.normalizeMessages(response.message));
                         }
                     },
                     error: (err) => {
-                        console.warn(this.utils.normalizeMessages(err?.error?.message));
+                        this.errorToast(this.utils.normalizeMessages(err?.error?.message));
                     }
                 });
 
@@ -209,36 +203,25 @@ export class OpcionesComponent implements OnInit {
         });
     }
 
-    hideDialog() {
-        this.opcionDialog = false;
-        this.submitted = false;
-    }
 
     deleteOpcion(opcion: any) {
         this.confirmationService.confirm({
-            message: '¿Estas seguro de eliminar esta opcion ' + opcion.nombre + '?',
+            message: '¿Estás seguro de eliminar esta opción ' + opcion.nombre + '?',
             header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
                 this.opcionesService.delete(opcion.id).subscribe({
                     next: (res: StatusResponse<any>) => {
-                        if (res.ok && res.data) {
+                        if (res.ok) {
                             this.opciones.set(this.opciones().filter((val) => val.id !== opcion.id));
                             this.opcion = {};
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Opciones Deleted',
-                                life: 3000
-                            });
+                            this.successToast('Opción eliminada correctamente');
                         } else {
                             this.errorToast(this.utils.normalizeMessages(res.message));
-                            console.warn(this.utils.normalizeMessages(res.message));
                         }
                     },
                     error: (err) => {
                         this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                        console.warn(this.utils.normalizeMessages(err?.error?.message));
                     }
                 });
 
@@ -284,16 +267,14 @@ export class OpcionesComponent implements OnInit {
             this.opcionesService.create(newOpcion).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
-                       this.opciones.set([...this.opciones(), res.data]);
+                        this.opciones.set([...this.opciones(), res.data]);
                         this.successToast('Opción creada correctamente');
                     } else {
                         this.errorToast(this.utils.normalizeMessages(res.message));
-                        console.warn(this.utils.normalizeMessages(res.message));
                     }
                 },
                 error: (err) => {
                     this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                    console.warn(this.utils.normalizeMessages(err?.error?.message));
                 }
             });
         }
