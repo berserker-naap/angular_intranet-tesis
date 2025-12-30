@@ -24,16 +24,8 @@ import { StatusResponse } from '../../../../shared/interface/status-response.int
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 import { Observable } from 'rxjs';
-interface Column {
-    field: string;
-    header: string;
-    customExportHeader?: string;
-}
+import { Modulo } from './interfaces/modulo.interface';
 
-interface ExportColumn {
-    title: string;
-    dataKey: string;
-}
 
 @Component({
     selector: 'app-modulos',
@@ -67,14 +59,11 @@ interface ExportColumn {
 })
 export class ModulosComponent implements OnInit {
     moduloDialog: boolean = false;
-    modulos = signal<any[]>([]);
-    modulo!: any;
-    selectedModulos!: any[] | null;
+    modulos = signal<Modulo[]>([]);
+    modulo!: Modulo;
+    selectedModulos!: Modulo[] | null;
     submitted: boolean = false;
-    statuses!: any[];
     @ViewChild('dt') dt!: Table;
-    exportColumns!: ExportColumn[];
-    cols!: Column[];
     form!: FormGroup;
     loading$: Observable<boolean> = new Observable<boolean>(observer => observer.next(false)); // Observable boolean
     constructor(
@@ -95,8 +84,8 @@ export class ModulosComponent implements OnInit {
 
     buildForm(modulo: any = {}) {
         this.form = this.fb.group({
-            nombre: [modulo.nombre || '', Validators.required],
-            icono: [modulo.icono || '', Validators.required]
+            nombre: [modulo.nombre ?? '', Validators.required],
+            icono: [modulo.icono ?? '', Validators.required]
         });
     }
 
@@ -108,79 +97,35 @@ export class ModulosComponent implements OnInit {
                     this.modulos.set(res.data);
                 } else {
                     this.errorToast(this.utils.normalizeMessages(res.message));
-                    console.warn(this.utils.normalizeMessages(res.message));
                 }
             },
             error: (err) => {
                 this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                console.warn(this.utils.normalizeMessages(err?.error?.message));
             }
         });
 
-        // this.cols = [
-        //     { field: 'Nombre', header: 'Name' },
-        //     { field: 'image', header: 'Image' },
-        //     { field: 'price', header: 'Price' },
-        //     { field: 'category', header: 'Category' }
-        // ];
 
-        // this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
     }
 
-    exportCSV() {
-        // this.dt.exportCSV();
-    }
 
     onGlobalFilter(table: Table, event: Event) {
         table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
     }
 
     openNew() {
-        this.modulo = {};
+        this.modulo = {} as Modulo;
         this.submitted = false;
         this.buildForm(); // <- Aquí
         this.moduloDialog = true;
     }
 
     openEdit(modulo: any) {
-        this.modulo = { ...modulo };
-        this.buildForm(this.modulo); // <- Aquí
+        this.modulo = { ...modulo } as Modulo;
+        this.buildForm(this.modulo);
         this.moduloDialog = true;
     }
 
 
-    deleteSelectedModulos() {
-        this.confirmationService.confirm({
-            message: '¿Estas seguro de eliminar las modulos seleccionadas?',
-            header: 'Confirmar',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                const idsToDelete = this.selectedModulos?.map(modulo => modulo.id) || [];
-                this.modulosService.deleteMany(idsToDelete).subscribe({
-                    next: (response: StatusResponse<any>) => {
-                        if (response.ok && response.data) {
-                            console.log(response);
-                            this.modulos.set(this.modulos().filter((val) => !this.selectedModulos?.includes(val)));
-                            this.selectedModulos = null;
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Modulos Deleted',
-                                life: 3000
-                            });
-                        } else {
-                            console.warn(this.utils.normalizeMessages(response.message));
-                        }
-                    },
-                    error: (err) => {
-                        console.warn(this.utils.normalizeMessages(err?.error?.message));
-                    }
-                });
-
-
-            }
-        });
-    }
 
     hideDialog() {
         this.moduloDialog = false;
@@ -195,9 +140,34 @@ export class ModulosComponent implements OnInit {
             accept: () => {
                 this.modulosService.delete(modulo.id).subscribe({
                     next: (res: StatusResponse<any>) => {
-                        if (res.ok && res.data) {
+                        if (res.ok) {
                             this.modulos.set(this.modulos().filter((val) => val.id !== modulo.id));
-                            this.modulo = {};
+                            this.modulo = {} as Modulo;
+                            this.successToast('Modulo Eliminado');
+                        } else {
+                            this.errorToast(this.utils.normalizeMessages(res.message));
+                        }
+                    },
+                    error: (err) => {
+                        this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                    }
+                });
+            }
+        });
+    }
+
+    deleteSelectedModulos() {
+        this.confirmationService.confirm({
+            message: '¿Estas seguro de eliminar las modulos seleccionadas?',
+            header: 'Confirmar',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                const idsToDelete = this.selectedModulos?.map(modulo => modulo.id!) || [];
+                this.modulosService.deleteMany(idsToDelete).subscribe({
+                    next: (response: StatusResponse<any>) => {
+                        if (response.ok) {
+                            this.modulos.set(this.modulos().filter((val) => !idsToDelete.includes(val.id!)));
+                            this.selectedModulos = null;
                             this.messageService.add({
                                 severity: 'success',
                                 summary: 'Successful',
@@ -205,15 +175,14 @@ export class ModulosComponent implements OnInit {
                                 life: 3000
                             });
                         } else {
-                            this.errorToast(this.utils.normalizeMessages(res.message));
-                            console.warn(this.utils.normalizeMessages(res.message));
+                             this.errorToast(this.utils.normalizeMessages(response.message));
                         }
                     },
                     error: (err) => {
                         this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                        console.warn(this.utils.normalizeMessages(err?.error?.message));
                     }
                 });
+
 
             }
         });
@@ -234,7 +203,7 @@ export class ModulosComponent implements OnInit {
                         this.modulos.set(
                             this.modulos().map(op => op.id === this.modulo.id ? updated : op)
                         );
-                        this.successToast('Modulo actualizada correctamente');
+                        this.successToast('Modulo actualizado correctamente');
                     } else {
                         this.errorToast(this.utils.normalizeMessages(res.message));
                     }
@@ -251,15 +220,13 @@ export class ModulosComponent implements OnInit {
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.modulos.set([...this.modulos(), res.data]);
-                        this.successToast('Modulo creada correctamente');
+                        this.successToast('Modulo creado correctamente');
                     } else {
                         this.errorToast(this.utils.normalizeMessages(res.message));
-                        console.warn(this.utils.normalizeMessages(res.message));
                     }
                 },
                 error: (err) => {
                     this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                    console.warn(this.utils.normalizeMessages(err?.error?.message));
                 }
             });
         }
