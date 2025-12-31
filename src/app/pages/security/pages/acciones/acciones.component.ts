@@ -139,7 +139,7 @@ export class AccionesComponent implements OnInit {
                 const idsToDelete = this.selectedAcciones?.map(accion => accion.id) || [];
                 this.accionesService.deleteMany(idsToDelete).subscribe({
                     next: (response: StatusResponse<any>) => {
-                        if (response.ok && response.data) {
+                        if (response.ok) {
                             console.log(response);
                             this.acciones.set(this.acciones().filter((val) => !idsToDelete.includes(val.id)));
                             this.selectedAcciones = null;
@@ -166,7 +166,7 @@ export class AccionesComponent implements OnInit {
             accept: () => {
                 this.accionesService.delete(accion.id).subscribe({
                     next: (res: StatusResponse<any>) => {
-                        if (res.ok && res.data) {
+                        if (res.ok) {
                             this.acciones.set(this.acciones().filter((val) => val.id !== accion.id));
                             this.accion = {};
                             this.successToast('Acción Eliminada');
