@@ -50,7 +50,8 @@
 
                 <div>
                     <label class="block font-bold mb-2">Password</label>
-                    <input pInputText formControlName="password" class="w-full" toggleMask="true" />
+                    <input pInputText formControlName="password" class="w-full" toggleMask="true"
+                        [disabled]="isEditMode" [ngClass]="{ 'bg-gray-200': isEditMode }" />
                 </div>
 
                 <div>

@@ -88,6 +88,7 @@ export class UsuariosComponent implements OnInit {
     @ViewChild('dt') dt!: Table;
     exportColumns!: ExportColumn[];
     tipoDocumentos: any[] = [];
+    isEditMode: boolean = false; // Nueva variable para el modo de edición
     personas: any[] = []; // cargar desde un servicio
     loading$: Observable<boolean> = new Observable<boolean>(observer => observer.next(false)); // Observable boolean
     constructor(
@@ -109,13 +110,76 @@ export class UsuariosComponent implements OnInit {
         this.getTipoDocumentos();
         this.buildForm();
     }
+
+    getRoles() {
+        this.rolesService.findAll().subscribe({
+            next: (res: StatusResponse<any>) => {
+                if (res.ok && res.data) {
+                    this.allRoles = res.data;
+                } else {
+                    this.errorToast(this.utils.normalizeMessages(res.message));
+                }
+            },
+            error: (err) => {
+                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+            }
+        });
+    }
+    getPersonas() {
+        this.personasService.findAll().subscribe({
+            next: (res: StatusResponse<any>) => {
+                if (res.ok && res.data) {
+                    this.personas = res.data;
+                } else {
+                    this.errorToast(this.utils.normalizeMessages(res.message));
+                }
+            },
+            error: (err) => {
+                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+            }
+        });
+    }
+    getTipoDocumentos() {
+        this.multitablaService.getTipoDocumento().subscribe({
+            next: (res: StatusResponse<any>) => {
+                if (res.ok && res.data) {
+                    this.tipoDocumentos = res.data.items;
+                } else {
+                    this.errorToast(this.utils.normalizeMessages(res.message));
+                }
+            },
+            error: (err) => {
+                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+            }
+        });
+    }
+    loadData() {
+        this.usuariosService.findAll().subscribe({
+            next: (res: StatusResponse<any>) => {
+                if (res.ok && res.data) {
+                    this.usuarios.set(res.data);
+                } else {
+                    this.errorToast(this.utils.normalizeMessages(res.message));
+                }
+            },
+            error: (err) => {
+                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+            }
+        });
+    }
+
+
+
     buildForm(usuario: any = {}) {
         const persona = usuario.persona || {};
 
         this.form = this.fb.group({
             login: [usuario.login || '', Validators.required],
-            password: [usuario.password || '', Validators.required],
-            idPersona: [usuario?.idPersona || null],
+            password: [
+                { value: usuario.password || '', disabled: this.isEditMode }, // Deshabilita si es edición
+                Validators.required
+            ],
+            idPersona: [persona?.id || null],
             persona: this.fb.group({
                 nombre: [persona.nombre || ''],
                 apellido: [persona.apellido || ''],
@@ -134,23 +198,6 @@ export class UsuariosComponent implements OnInit {
         this.aplicarValidadoresDinamicos();
     }
 
-    getTipoDocumentos() {
-        this.multitablaService.getTipoDocumento().subscribe({
-            next: (res: StatusResponse<any>) => {
-                console.log(res);
-                if (res.ok && res.data) {
-                    this.tipoDocumentos = res.data.items;
-                } else {
-                    this.errorToast(this.utils.normalizeMessages(res.message));
-                    console.warn(this.utils.normalizeMessages(res.message));
-                }
-            },
-            error: (err) => {
-                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                console.warn(this.utils.normalizeMessages(err?.error?.message));
-            }
-        });
-    }
 
     aplicarValidadoresDinamicos() {
         const personaGroup = this.form.get('persona') as FormGroup;
@@ -183,66 +230,18 @@ export class UsuariosComponent implements OnInit {
         return this.form.get('persona') as FormGroup;
     }
 
-    getRoles() {
-        this.rolesService.findAll().subscribe({
-            next: (res: StatusResponse<any>) => {
-                if (res.ok && res.data) {
-                    this.allRoles = res.data;
-                    console.log('rolesDisponibles:', this.rolesDisponibles);
-                } else {
-                    this.errorToast(this.utils.normalizeMessages(res.message));
-                    console.warn(this.utils.normalizeMessages(res.message));
-                }
-            },
-            error: (err) => {
-                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                console.warn(this.utils.normalizeMessages(err?.error?.message));
-            }
-        });
-    }
-    getPersonas() {
-        this.personasService.findAll().subscribe({
-            next: (res: StatusResponse<any>) => {
-                if (res.ok && res.data) {
-                    this.personas = res.data;
-                } else {
-                    this.errorToast(this.utils.normalizeMessages(res.message));
-                    console.warn(this.utils.normalizeMessages(res.message));
-                }
-            },
-            error: (err) => {
-                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                console.warn(this.utils.normalizeMessages(err?.error?.message));
-            }
-        });
-    }
-
-    loadData() {
-        this.usuariosService.findAll().subscribe({
-            next: (res: StatusResponse<any>) => {
-                if (res.ok && res.data) {
-                    this.usuarios.set(res.data);
-                } else {
-                    this.errorToast(this.utils.normalizeMessages(res.message));
-                    console.warn(this.utils.normalizeMessages(res.message));
-                }
-            },
-            error: (err) => {
-                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                console.warn(this.utils.normalizeMessages(err?.error?.message));
-            }
-        });
-    }
 
     openNew() {
         this.usuario = {};
         this.submitted = false;
+        this.isEditMode = false; // Modo creación
         this.buildForm(); // <- Aquí
         this.usuarioDialog = true;
     }
 
     openEdit(usuario: any) {
         this.usuario = { ...usuario };
+        this.isEditMode = true; // Modo edición
         this.buildForm(this.usuario); // <- Aquí
         this.usuarioDialog = true;
     }
