@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, finalize } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { StatusResponse } from '../../../shared/interface/status-response.interface';
-import { CreateUsuarioDto, UsuarioDto } from '../interfaces';
 
 @Injectable({
     providedIn: 'root'
@@ -29,7 +28,7 @@ export class UsuariosService {
         );
     }
 
-    create(data: CreateUsuarioDto): Observable<StatusResponse<any>> {
+    create(data: any): Observable<StatusResponse<any>> {
         return this.withLoading(
             this.http.post<StatusResponse<any>>(this.apiUrl, data)
         );

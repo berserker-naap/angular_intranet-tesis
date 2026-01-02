@@ -262,6 +262,7 @@ export class OpcionesComponent implements OnInit {
             });
 
         } else {
+            delete data.id;
             const newOpcion = { ...data };
 
             this.opcionesService.create(newOpcion).subscribe({

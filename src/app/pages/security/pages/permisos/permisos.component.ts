@@ -28,7 +28,7 @@ import { Observable } from 'rxjs';
 import { PermisoService } from '../../services/permiso.service';
 import { RolesService } from '../../services/roles.service';
 import { CheckboxModule } from 'primeng/checkbox';
-import { PermisoModulo } from '../../interfaces';
+import { PermisoModulo } from './interfaces/permiso.interface';
 interface Column {
     field: string;
     header: string;

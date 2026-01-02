@@ -214,6 +214,7 @@ export class ModulosComponent implements OnInit {
             });
 
         } else {
+            
             const newModulo = { ...data };
 
             this.modulosService.create(newModulo).subscribe({

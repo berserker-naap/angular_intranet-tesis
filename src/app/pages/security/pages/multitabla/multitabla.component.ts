@@ -241,6 +241,7 @@ export class MultitablaComponent implements OnInit {
         if (this.form.invalid) return;
 
         const dto: Multitabla = { ...this.form.value };
+
         if (dto.id) {
             // UPDATE
             this.multitablaService.update(dto.id, dto).subscribe({

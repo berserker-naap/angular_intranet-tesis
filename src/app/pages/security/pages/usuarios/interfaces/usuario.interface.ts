@@ -1,5 +1,5 @@
 export interface Usuario {
-  id: number | null; // null cuando es nuevo, number cuando existe
+  id?: number | null; // null cuando es nuevo, number cuando existe
   login: string;
   password?: string | null;
   persona?: {

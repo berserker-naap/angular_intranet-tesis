@@ -5,36 +5,35 @@
     </div>
 
     <p-table #dt [value]="usuarios()" [paginator]="true" [rows]="10" [tableStyle]="{ 'min-width': '60rem' }"
-            [rowHover]="true" [rowsPerPageOptions]="[10, 20, 30]" [globalFilterFields]="['nombre', 'icono']"
-            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} usuarios"
-            [(selection)]="selectedUsuarios" dataKey="id">
-               <ng-template #header>
-                <tr>
-                    <th style="width: 3rem">
-                        <p-tableHeaderCheckbox />
-                    </th>
-                    <th pSortableColumn="nombre">Login <p-sortIcon field="login" /></th>
-                    <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
-                    <th>Acciones</th>
-                </tr>
-            </ng-template>
+        [rowHover]="true" [rowsPerPageOptions]="[10, 20, 30]" [globalFilterFields]="['nombre', 'icono']"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} usuarios"
+        [(selection)]="selectedUsuarios" dataKey="id">
+        <ng-template #header>
+            <tr>
+                <th style="width: 3rem">
+                    <p-tableHeaderCheckbox />
+                </th>
+                <th pSortableColumn="nombre">Login <p-sortIcon field="login" /></th>
+                <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
+                <th>Acciones</th>
+            </tr>
+        </ng-template>
 
-            <ng-template #body let-usuario>
-                <tr>
-                    <td>{{ usuario.login }}</td>
-                    <td>{{ usuario.persona?.nombre }} {{ usuario.persona?.apellido }}</td>
-                    <td>
-                        <p-tag *ngFor="let rol of usuario.roles" [value]="rol.nombre" class="mr-1" />
-                    </td>
-                    <td>
-                         <p-button icon="pi pi-user-edit" label="Asignar Roles" (click)="abrirAsignarRoles(usuario)" />
-                        <p-button icon="pi pi-pencil" severity="info" rounded outlined class="mr-2"
-                            (click)="openEdit(usuario)" />
-                        <p-button icon="pi pi-trash" severity="danger" rounded outlined
-                            (click)="deleteUsuario(usuario)" />
-                    </td>
-                </tr>
-            </ng-template>
+        <ng-template #body let-usuario>
+            <tr>
+                <td>{{ usuario.login }}</td>
+                <td>{{ usuario.persona?.nombre }} {{ usuario.persona?.apellido }}</td>
+                <td>
+                    <p-tag *ngFor="let rol of usuario.roles" [value]="rol.nombre" class="mr-1" />
+                </td>
+                <td>
+                    <p-button icon="pi pi-user-edit" label="Asignar Roles" (click)="abrirAsignarRoles(usuario)" />
+                    <p-button icon="pi pi-pencil" severity="info" rounded outlined class="mr-2"
+                        (click)="openEdit(usuario)" />
+                    <p-button icon="pi pi-trash" severity="danger" rounded outlined (click)="deleteUsuario(usuario)" />
+                </td>
+            </tr>
+        </ng-template>
     </p-table>
 </div>
 
@@ -50,7 +49,7 @@
 
                 <div>
                     <label class="block font-bold mb-2">Password</label>
-                    <input pInputText formControlName="password" class="w-full" toggleMask="true"
+                    <input pInputText formControlName="password" type="password" class="w-full" toggleMask="true"
                         [disabled]="isEditMode" [ngClass]="{ 'bg-gray-200': isEditMode }" />
                 </div>
 
@@ -61,7 +60,7 @@
                     </label>
                 </div>
 
-                <div [hidden]="!crearPersona" [formGroup]="personaForm">
+                <div [hidden]="!crearPersona" [formGroup]="personaForm" class="gap-6" [ngStyle]="crearPersona ? {'display': 'flex', 'flexDirection': 'column'} : {}">
                     <!-- Nombre -->
                     <div>
                         <label for="nombre" class="block font-bold mb-2">Nombre</label>
@@ -123,10 +122,9 @@
                     <label class="block font-bold mb-2">Roles</label>
                     <div class="card px-0" style="padding-left: 0px;padding-right: 0px;">
                         <p-pickList [source]="rolesDisponibles" [target]="rolesAsignados" optionLabel="nombre"
-                            [responsive]="true" breakpoint="750px" dragdrop="true" [metaKeySelection]="false"
-                            sourceHeader="Roles" targetHeader="Asignados"
-                             (onMoveToTarget)="onAsignarRoles($event)"
-  (onMoveToSource)="onQuitarRoles($event)">
+                            [responsive]="true" breakpoint="750px" dragdrop="false" [metaKeySelection]="false"
+                            sourceHeader="Roles" targetHeader="Asignados" (onMoveToTarget)="onAsignarRoles($event)"
+                            (onMoveToSource)="onQuitarRoles($event)">
                             <ng-template let-item pTemplate="item">
                                 {{ item.nombre }}
                             </ng-template>

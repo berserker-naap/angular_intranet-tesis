@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, ViewChild } from "@angular/core";
 import { FormGroup, FormBuilder, Validators, FormsModule, ReactiveFormsModule } from "@angular/forms";
-import { UsuarioDto } from "../../interfaces";
+
 import { PersonasService } from "../../services/personas.service";
 import { RolesService } from "../../services/roles.service";
 import { CommonModule } from "@angular/common";
@@ -32,6 +32,7 @@ import { Observable } from "rxjs";
 import { PickListModule } from "primeng/picklist";
 import { MultitablaService } from "../../services/multitabla.service";
 import { DatePickerModule } from "primeng/datepicker";
+import { Usuario } from "./interfaces/usuario.interface";
 interface Column {
     field: string;
     header: string;
@@ -76,8 +77,8 @@ interface ExportColumn {
 })
 export class UsuariosComponent implements OnInit {
     usuarioDialog: boolean = false;
-    usuarios = signal<any[]>([]);
-    usuario!: any;
+    usuarios = signal<Usuario[]>([]);
+    usuario!: Usuario;
     selectedUsuarios!: any[] | null;
     allRoles: any[] = []; // todos los roles posibles
     rolesDisponibles: any[] = []; // cargar desde servicio
@@ -191,13 +192,14 @@ export class UsuariosComponent implements OnInit {
             }),
             roles: [usuario.roles?.map((r: any) => r.id) || []]
         });
-        console.log('Formulario creado:', this.usuario);
         this.rolesAsignados = usuario.roles || [];
         this.rolesDisponibles = [...this.allRoles];
-        console.log('Usuario cargado:', this.rolesAsignados);
         this.aplicarValidadoresDinamicos();
     }
 
+    get personaForm(): FormGroup {
+        return this.form.get('persona') as FormGroup;
+    }
 
     aplicarValidadoresDinamicos() {
         const personaGroup = this.form.get('persona') as FormGroup;
@@ -225,27 +227,6 @@ export class UsuariosComponent implements OnInit {
         personaGroup.updateValueAndValidity();
         idPersonaControl?.updateValueAndValidity();
     }
-
-    get personaForm(): FormGroup {
-        return this.form.get('persona') as FormGroup;
-    }
-
-
-    openNew() {
-        this.usuario = {};
-        this.submitted = false;
-        this.isEditMode = false; // Modo creación
-        this.buildForm(); // <- Aquí
-        this.usuarioDialog = true;
-    }
-
-    openEdit(usuario: any) {
-        this.usuario = { ...usuario };
-        this.isEditMode = true; // Modo edición
-        this.buildForm(this.usuario); // <- Aquí
-        this.usuarioDialog = true;
-    }
-
     togglePersona(event: Event) {
         const input = event.target as HTMLInputElement;
         this.crearPersona = input.checked;
@@ -259,6 +240,22 @@ export class UsuariosComponent implements OnInit {
         this.aplicarValidadoresDinamicos();
     }
 
+    openNew() {
+        this.usuario = {} as Usuario;
+        this.submitted = false;
+        this.isEditMode = false; // Modo creación
+        this.buildForm(); // <- Aquí
+        this.usuarioDialog = true;
+    }
+
+    openEdit(usuario: Usuario) {
+        this.usuario = { ...usuario };
+        this.isEditMode = true; // Modo edición
+        this.buildForm(this.usuario); // <- Aquí
+        this.usuarioDialog = true;
+    }
+
+
     onAsignarRoles(event: any) {
         this.form.get('roles')?.setValue(this.rolesAsignados.map(r => r.id));
         this.form.get('roles')?.markAsTouched();
@@ -271,15 +268,11 @@ export class UsuariosComponent implements OnInit {
 
 
     saveUpdateUsuario() {
-        console.log('Guardando usuario:', this.form.value);
         this.submitted = true;
-        console.log('Errores del formulario:', this.form.errors);
-        console.log('Controles individuales:', this.form.controls);
         if (this.form.invalid) return;
-        console.log('Formulario válido, guardando usuario:', this.form.value);
-        const dto = { ...this.form.value };
+        const usuarioData = this.formValueToUsuario({ ...this.form.value });
 
-        if (dto.id) {
+        if (usuarioData.id) {
             // UPDATE
             // this.usuariosService.update(dto.id, dto).subscribe({
             //     next: (res) => {
@@ -297,10 +290,7 @@ export class UsuariosComponent implements OnInit {
             //     }
             // });
         } else {
-            // CREATE
-            delete dto.id;
-
-            this.usuariosService.create(dto).subscribe({
+            this.usuariosService.create(usuarioData).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.usuarios.set([...this.usuarios(), res.data]);
@@ -318,7 +308,7 @@ export class UsuariosComponent implements OnInit {
         this.usuarioDialog = false;
     }
 
-    abrirAsignarRoles(usuario: UsuarioDto) {
+    abrirAsignarRoles(usuario: Usuario) {
         // Lo vemos si deseas implementar edición desde modal aparte
     }
 
@@ -347,6 +337,29 @@ export class UsuariosComponent implements OnInit {
     }
 
     deleteUsuario(usuario: any) {
+    }
+
+
+    formValueToUsuario(formValue: any): Usuario {
+        return {
+            id: formValue.id ?? undefined,
+            login: formValue.login,
+            password: formValue.password,
+            persona: formValue.persona ? {
+                id: formValue.idPersona ?? undefined,
+                nombre: formValue.persona.nombre,
+                apellido: formValue.persona.apellido,
+                idTipoDocumentoIdentidad: formValue.persona.idTipoDocumentoIdentidad,
+                documentoIdentidad: formValue.persona.documentoIdentidad,
+                fechaNacimiento: formValue.persona.fechaNacimiento
+            } : undefined,
+            roles: Array.isArray(formValue.roles)
+                ? formValue.roles.map((id: number) => {
+                    const rol = this.allRoles.find(r => r.id === id);
+                    return rol ? { id: rol.id, nombre: rol.nombre } : { id };
+                })
+                : [],
+        };
     }
 
 }
