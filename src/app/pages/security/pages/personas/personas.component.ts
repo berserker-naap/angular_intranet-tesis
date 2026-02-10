@@ -94,38 +94,31 @@ export class PersonasComponent implements OnInit {
 
     loadData() {
         this.personasService.findAll().subscribe({
-            next: (res: StatusResponse<any>) => {
-                console.log(res);
+            next: (res: StatusResponse<Persona[]>) => {
                 if (res.ok && res.data) {
                     this.personas.set(res.data);
                 } else {
                     this.errorToast(this.utils.normalizeMessages(res.message));
-                    console.warn(this.utils.normalizeMessages(res.message));
                 }
             },
             error: (err) => {
                 this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                console.warn(this.utils.normalizeMessages(err?.error?.message));
             }
         });
-
     }
 
 
     getTipoDocumentos() {
         this.multitablaService.getTipoDocumento().subscribe({
             next: (res: StatusResponse<any>) => {
-                console.log(res);
                 if (res.ok && res.data) {
                     this.tipoDocumentos = res.data.items;
                 } else {
                     this.errorToast(this.utils.normalizeMessages(res.message));
-                    console.warn(this.utils.normalizeMessages(res.message));
                 }
             },
             error: (err) => {
                 this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                console.warn(this.utils.normalizeMessages(err?.error?.message));
             }
         });
     }
@@ -169,13 +162,11 @@ export class PersonasComponent implements OnInit {
         this.personaDialog = true;
     }
 
-    buildForm(persona: Partial<Persona> = {}) {
+    buildForm(persona: Persona = {} as Persona) {
         this.form = this.fb.group({
             nombre: [persona.nombre || '', Validators.required],
             apellido: [persona.apellido || '', Validators.required],
-            idTipoDocumentoIdentidad: [(persona.tipoDocumento ? persona.tipoDocumento.idTipoDocumentoIdentidad : null),
-            Validators.required
-            ],
+            idTipoDocumentoIdentidad: [persona.tipoDocumento?.id || null, Validators.required],
             documentoIdentidad: [persona.documentoIdentidad || '', Validators.required],
             fechaNacimiento: [
                 persona.fechaNacimiento ? new Date(persona.fechaNacimiento) : null,
@@ -189,30 +180,39 @@ export class PersonasComponent implements OnInit {
         this.submitted = false;
     }
 
+    private formatDateToString(date: Date): string {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     saveUpdatePersona() {
         this.submitted = true;
         if (this.form.invalid) return;
 
         const data = this.form.value;
+        // Formatear fechaNacimiento como YYYY-MM-DD
+        const fechaNacimientoFormateada = data.fechaNacimiento
+            ? this.formatDateToString(data.fechaNacimiento)
+            : null;
 
         if (this.persona.id) {
-            const updated = { ...this.persona, ...data };
-
-            this.personasService.update(updated.id,
-                {
-                    nombre: updated.nombre,
-                    apellido: updated.apellido,
-                    idTipoDocumentoIdentidad: updated.idTipoDocumentoIdentidad,
-                    documentoIdentidad: updated.documentoIdentidad,
-                    fechaNacimiento: updated.fechaNacimiento
-                }
+            this.personasService.update(this.persona.id, {
+                nombre: data.nombre,
+                apellido: data.apellido,
+                idTipoDocumentoIdentidad: data.idTipoDocumentoIdentidad,
+                documentoIdentidad: data.documentoIdentidad,
+                fechaNacimiento: fechaNacimientoFormateada
+            }
             ).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.personas.set(
                             this.personas().map(op => op.id === this.persona.id ? res.data : op)
                         );
-                        this.successToast('Opción actualizada correctamente');
+                        this.successToast('Persona actualizada correctamente');
+                        this.hideDialog();
                     } else {
                         this.errorToast(this.utils.normalizeMessages(res.message));
                     }
@@ -223,21 +223,24 @@ export class PersonasComponent implements OnInit {
             });
 
         } else {
-            const newPersona = { ...data };
-
-            this.personasService.create(newPersona).subscribe({
+            this.personasService.create({
+                nombre: data.nombre,
+                apellido: data.apellido,
+                idTipoDocumentoIdentidad: data.idTipoDocumentoIdentidad,
+                documentoIdentidad: data.documentoIdentidad,
+                fechaNacimiento: fechaNacimientoFormateada
+            }).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.personas.set([...this.personas(), res.data]);
-                        this.successToast('Opción creada correctamente');
+                        this.successToast('Persona creada correctamente');
+                        this.hideDialog();
                     } else {
                         this.errorToast(this.utils.normalizeMessages(res.message));
-                        console.warn(this.utils.normalizeMessages(res.message));
                     }
                 },
                 error: (err) => {
                     this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                    console.warn(this.utils.normalizeMessages(err?.error?.message));
                 }
             });
         }
@@ -247,26 +250,22 @@ export class PersonasComponent implements OnInit {
 
     deletePersona(persona: Persona) {
         this.confirmationService.confirm({
-            message: '¿Estas seguro de eliminar esta persona ' + persona.nombre + '?',
+            message: '¿Estás seguro de eliminar a ' + persona.nombre + '?',
             header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
                 this.personasService.delete(persona.id).subscribe({
                     next: (res: StatusResponse<any>) => {
                         if (res.ok) {
-                            // Si res.data es null, igual eliminamos por persona.id
-                            const idToRemove = persona.id;
-                            this.personas.set(this.personas().filter((val) => val.id !== idToRemove));
+                            this.personas.set(this.personas().filter((val) => val.id !== persona.id));
                             this.persona = {} as Persona;
-                            this.successToast('Persona Eliminada');
+                            this.successToast('Persona eliminada correctamente');
                         } else {
                             this.errorToast(this.utils.normalizeMessages(res.message));
-                            console.warn(this.utils.normalizeMessages(res.message));
                         }
                     },
                     error: (err) => {
                         this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                        console.warn(this.utils.normalizeMessages(err?.error?.message));
                     }
                 });
             }
@@ -287,17 +286,15 @@ export class PersonasComponent implements OnInit {
                                 this.personas().filter((val) => !idsToDelete.includes(val.id))
                             );
                             this.selectedPersonas = null;
-                            this.successToast('Personas Eliminadas');
+                            this.successToast('Personas eliminadas correctamente');
                         } else {
-                            console.warn(this.utils.normalizeMessages(response.message));
+                            this.errorToast(this.utils.normalizeMessages(response.message));
                         }
                     },
                     error: (err) => {
-                        console.warn(this.utils.normalizeMessages(err?.error?.message));
+                        this.errorToast(this.utils.normalizeMessages(err?.error?.message));
                     }
                 });
-
-
             }
         });
     }

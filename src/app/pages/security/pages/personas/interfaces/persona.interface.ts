@@ -1,27 +1,16 @@
 export interface TipoDocumento {
-  idTipoDocumentoIdentidad: number;
+  id: number;
   nombre: string;
-  valor: string;
+  valor: string | null;
 }
 
 export interface Persona {
-  activo: boolean;
-  eliminado: boolean;
-  ipRegistro: string;
-  fechaRegistro: string;
-  usuarioRegistro: string;
-  ipModificacion: string | null;
-  fechaModificacion: string | null;
-  usuarioModificacion: string | null;
-  ipEliminacion: string | null;
-  fechaEliminacion: string | null;
-  usuarioEliminacion: string | null;
   id: number;
   nombre: string;
-  apellido: string;
-  tipoDocumento: TipoDocumento;
-  documentoIdentidad: string;
-  fechaNacimiento: string;
+  apellido: string | null;
+  documentoIdentidad: string | null;
+  fechaNacimiento: string | null;
+  tipoDocumento: TipoDocumento | null;
 }
 
 export interface PersonaResponse {
