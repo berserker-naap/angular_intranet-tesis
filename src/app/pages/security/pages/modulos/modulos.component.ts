@@ -93,8 +93,7 @@ export class ModulosComponent implements OnInit {
         this.modulosService.findAll().subscribe({
             next: (res: StatusResponse<any>) => {
                 if (res.ok && res.data) {
-                    const modulosMapeados = res.data.map((item: any) => this.mapToModulo(item));
-                    this.modulos.set(modulosMapeados);
+                    this.modulos.set(res.data);
                 } else {
                     this.notificationToastService.error(this.utils.normalizeMessages(res.message));
                 }
@@ -191,13 +190,11 @@ export class ModulosComponent implements OnInit {
         const data = this.form.value;
 
         if (this.modulo.id) {
-            const updated = this.mapToModulo({ ...this.modulo, ...data });
-
-            this.modulosService.update(updated.id!, updated).subscribe({
+            this.modulosService.update(this.modulo.id!, data).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.modulos.set(
-                            this.modulos().map(op => op.id === res.data.id ? updated : op)
+                            this.modulos().map(op => op.id === res.data.id ? res.data : op)
                         );
                         this.notificationToastService.success('Módulo actualizado correctamente');
                         this.hideDialog();
@@ -211,10 +208,7 @@ export class ModulosComponent implements OnInit {
             });
 
         } else {
-
-            const newModulo = this.mapToModulo({ ...data });
-
-            this.modulosService.create(newModulo).subscribe({
+            this.modulosService.create(data).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.modulos.set([...this.modulos(), res.data]);
@@ -229,14 +223,6 @@ export class ModulosComponent implements OnInit {
                 }
             });
         }
-    }
-
-    private mapToModulo(data: any): Modulo {
-        return {
-            id: data.id,
-            nombre: data.nombre,
-            icono: data.icono
-        };
     }
 
 }

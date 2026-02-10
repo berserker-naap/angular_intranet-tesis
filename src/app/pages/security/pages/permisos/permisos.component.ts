@@ -28,7 +28,8 @@ import { Observable } from 'rxjs';
 import { PermisoService } from '../../services/permiso.service';
 import { RolesService } from '../../services/roles.service';
 import { CheckboxModule } from 'primeng/checkbox';
-import { PermisoModulo } from './interfaces/permiso.interface';
+import { PermisoModulo, PermisoOpcion, PermisoAccion } from './interfaces/permiso.interface';
+import { Rol } from '../roles/interfaces/rol.interface';
 interface Column {
     field: string;
     header: string;
@@ -74,12 +75,11 @@ interface ExportColumn {
 })
 export class PermisosComponent implements OnInit {
 
-    roles: any[] = [];
+    roles: Rol[] = [];
     rolSeleccionado: number | null = null;
     permisos: PermisoModulo[] = [];
-    cambios: { idRol: number; idOpcion: number; idAccion: number; asignado: boolean }[] = [];
-    loadingRoles$: Observable<boolean> = new Observable<boolean>(observer => observer.next(false)); // Observable boolean
-    loading$: Observable<boolean> = new Observable<boolean>(observer => observer.next(false)); // Observable boolean
+    loadingRoles$: Observable<boolean> = new Observable<boolean>(observer => observer.next(false));
+    loading$: Observable<boolean> = new Observable<boolean>(observer => observer.next(false));
 
     constructor(
         private rolesService: RolesService,
@@ -96,7 +96,7 @@ export class PermisosComponent implements OnInit {
 
     loadData() {
         this.rolesService.findAll().subscribe({
-            next: (res: StatusResponse<any>) => {
+            next: (res: StatusResponse<Rol[]>) => {
                 if (res.ok && res.data) {
                     this.roles = res.data;
                 } else {
@@ -115,10 +115,9 @@ export class PermisosComponent implements OnInit {
         if (!this.rolSeleccionado) return;
 
         this.permisoService.getPermisosPorRol(this.rolSeleccionado).subscribe({
-            next: (res: StatusResponse<any>) => {
+            next: (res: StatusResponse<PermisoModulo[]>) => {
                 if (res.ok && res.data) {
                     this.permisos = res.data;
-                    this.cambios = [];
                 } else {
                     this.errorToast(this.utilsService.normalizeMessages(res.message));
                     console.warn(this.utilsService.normalizeMessages(res.message));
@@ -131,22 +130,19 @@ export class PermisosComponent implements OnInit {
         });
     }
 
-    togglePermiso(opcionId: number, accionId: number, asignado: boolean) {
+    togglePermiso(opcionId: number, accionId: number, isAsignado: boolean) {
         const payload = [{
             idRol: this.rolSeleccionado!,
             idOpcion: opcionId,
             idAccion: accionId,
-            asignado
+            isAsignado
         }];
 
         this.permisoService.actualizarPermisos(payload).subscribe({
             next: (res: StatusResponse<any>) => {
-                console.log(res);
                 if (res.ok) {
-                      console.log('Permiso actualizado correctamente');
                     this.successToast('Permiso actualizado correctamente');
                 } else {
-                       console.log('Permiso no actualizado:', res.message);
                     this.errorToast(this.utilsService.normalizeMessages(res.message));
                     this.revertirPermiso(opcionId, accionId);
                 }
@@ -167,7 +163,7 @@ export class PermisosComponent implements OnInit {
         const accion = opcion?.acciones.find(a => a.id === accionId);
 
         if (accion) {
-            accion.asignado = !accion.asignado;
+            accion.isAsignado = !accion.isAsignado;
         }
     }
 

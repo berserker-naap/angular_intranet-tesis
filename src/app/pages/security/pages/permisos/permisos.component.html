@@ -27,7 +27,7 @@
             <p-checkbox
               [inputId]="'chk_' + opcion.id + '_' + accion.id"
               [binary]="true"
-              [(ngModel)]="accion.asignado"
+              [(ngModel)]="accion.isAsignado"
               (ngModelChange)="togglePermiso(opcion.id, accion.id, $event)">
             </p-checkbox>
 

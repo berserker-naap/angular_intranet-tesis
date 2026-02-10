@@ -26,6 +26,7 @@ import { ModulosService } from '../../services/modulos.service';
 import { DropdownModule } from 'primeng/dropdown';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 import { Observable } from 'rxjs';
+import { Opcion } from './interface/opcion.interface';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
 
@@ -62,10 +63,10 @@ import * as FileSaver from 'file-saver';
 })
 export class OpcionesComponent implements OnInit {
     opcionDialog: boolean = false;
-    opciones = signal<any[]>([]);
+    opciones = signal<Opcion[]>([]);
     modulos: any[] = [];
-    opcion!: any;
-    selectedOpciones!: any[] | null;
+    opcion!: Opcion;
+    selectedOpciones!: Opcion[] | null;
     submitted: boolean = false;
     @ViewChild('dt') dt!: Table;
     form!: FormGroup;
@@ -88,7 +89,7 @@ export class OpcionesComponent implements OnInit {
 
     }
 
-    buildForm(opcion: any = {}) {
+    buildForm(opcion: Opcion = {} as Opcion) {
         this.form = this.fb.group({
             idModulo: [opcion.modulo?.id ?? null, Validators.required], // 👈 clave
             nombre: [opcion.nombre || '', Validators.required],
@@ -116,7 +117,7 @@ export class OpcionesComponent implements OnInit {
     loadData() {
         this.modulos = [];
         this.opcionesService.findAll().subscribe({
-            next: (res: StatusResponse<any>) => {
+            next: (res: StatusResponse<Opcion[]>) => {
                 console.log(res);
                 if (res.ok && res.data) {
                     this.opciones.set(res.data);
@@ -156,13 +157,13 @@ export class OpcionesComponent implements OnInit {
     }
 
     openNew() {
-        this.opcion = {};
+        this.opcion = {} as Opcion;
         this.submitted = false;
         this.buildForm(); // <- Aquí
         this.opcionDialog = true;
     }
 
-    openEdit(opcion: any) {
+    openEdit(opcion: Opcion) {
         this.opcion = { ...opcion };
         this.buildForm(this.opcion); // <- Aquí
         this.opcionDialog = true;
@@ -186,7 +187,7 @@ export class OpcionesComponent implements OnInit {
                     next: (response: StatusResponse<any>) => {
                         if (response.ok) {
                             console.log(response);
-                            this.opciones.set(this.opciones().filter((val) => !idsToDelete.includes(val.id)));
+                            this.opciones.set(this.opciones().filter((val) => !idsToDelete.includes(val.id!)));
                             this.selectedOpciones = null;
                             this.successToast('Opciones eliminadas correctamente');
                         } else {
@@ -204,17 +205,17 @@ export class OpcionesComponent implements OnInit {
     }
 
 
-    deleteOpcion(opcion: any) {
+    deleteOpcion(opcion: Opcion) {
         this.confirmationService.confirm({
             message: '¿Estás seguro de eliminar esta opción ' + opcion.nombre + '?',
             header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                this.opcionesService.delete(opcion.id).subscribe({
+                this.opcionesService.delete(opcion.id!).subscribe({
                     next: (res: StatusResponse<any>) => {
                         if (res.ok) {
                             this.opciones.set(this.opciones().filter((val) => val.id !== opcion.id));
-                            this.opcion = {};
+                            this.opcion = {} as Opcion;
                             this.successToast('Opción eliminada correctamente');
                         } else {
                             this.errorToast(this.utils.normalizeMessages(res.message));
@@ -236,16 +237,7 @@ export class OpcionesComponent implements OnInit {
         const data = this.form.value;
 
         if (this.opcion.id) {
-            const updated = { ...this.opcion, ...data };
-
-            this.opcionesService.update(updated.id,
-                {
-                    idModulo: updated.idModulo,
-                    nombre: updated.nombre,
-                    path: updated.path,
-                    isVisibleNavegacion: updated.isVisibleNavegacion
-                }
-            ).subscribe({
+            this.opcionesService.update(this.opcion.id, data).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.opciones.set(
@@ -262,10 +254,7 @@ export class OpcionesComponent implements OnInit {
             });
 
         } else {
-            delete data.id;
-            const newOpcion = { ...data };
-
-            this.opcionesService.create(newOpcion).subscribe({
+            this.opcionesService.create(data).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.opciones.set([...this.opciones(), res.data]);

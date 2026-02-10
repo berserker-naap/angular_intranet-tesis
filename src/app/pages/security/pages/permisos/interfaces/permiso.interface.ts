@@ -1,7 +1,7 @@
 export interface PermisoAccion {
   id: number;
   nombre: string;
-  asignado: boolean;
+  isAsignado: boolean;
 }
 
 export interface PermisoOpcion {

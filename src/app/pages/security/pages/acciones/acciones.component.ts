@@ -93,8 +93,7 @@ export class AccionesComponent implements OnInit {
         this.accionesService.findAll().subscribe({
             next: (res: StatusResponse<Accion[]>) => {
                 if (res.ok && res.data) {
-                    const accionesMapeadas = res.data.map(item => this.mapToAccion(item));
-                    this.acciones.set(accionesMapeadas);
+                    this.acciones.set(res.data);
                 } else {
                     this.notificationToastService.error(this.utils.normalizeMessages(res.message));
                 }
@@ -139,12 +138,11 @@ export class AccionesComponent implements OnInit {
 
         //Si tengo algo en accion es que ando editando
         if (this.accion.id) {
-            const updated = this.mapToAccion({ ...this.accion, ...data });
-            this.accionesService.update(updated.id!, updated).subscribe({
+            this.accionesService.update(this.accion.id!, data).subscribe({
                 next: (response) => {
                     if (response.ok && response.data) {
                         this.acciones.set(
-                            this.acciones().map(op => op.id === response.data.id ? updated : op)
+                            this.acciones().map(op => op.id === response.data.id ? response.data : op)
                         );
                         this.notificationToastService.success('Acción actualizada correctamente');
                         this.hideDialog();
@@ -158,8 +156,7 @@ export class AccionesComponent implements OnInit {
             });
 
         } else {
-            const newAccion = this.mapToAccion({ ...data });
-            this.accionesService.create(newAccion).subscribe({
+            this.accionesService.create(data).subscribe({
                 next: (response) => {
                     if (response.ok && response.data) {
                         this.acciones.set([...this.acciones(), response.data]);
@@ -232,13 +229,5 @@ export class AccionesComponent implements OnInit {
             }
         });
     }
-
-    private mapToAccion(data: any): Accion {
-        return {
-            id: data.id,
-            nombre: data.nombre
-        };
-    }
-
 
 }
