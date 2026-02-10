@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, ViewChild } from '@angular/core';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 import { Table, TableModule } from 'primeng/table';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -25,6 +25,7 @@ import { InputSwitchModule } from 'primeng/inputswitch';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
 import { Observable } from 'rxjs';
 import { Modulo } from './interfaces/modulo.interface';
+import { NotificationToastService } from '../../../../shared/services/notification-toast.service';
 
 
 @Component({
@@ -55,7 +56,6 @@ import { Modulo } from './interfaces/modulo.interface';
     ],
     templateUrl: './modulos.component.html',
     styleUrls: ['./modulos.component.scss'],
-    providers: [MessageService, ConfirmationService]
 })
 export class ModulosComponent implements OnInit {
     moduloDialog: boolean = false;
@@ -68,9 +68,9 @@ export class ModulosComponent implements OnInit {
     loading$: Observable<boolean> = new Observable<boolean>(observer => observer.next(false)); // Observable boolean
     constructor(
         private modulosService: ModulosService,
-        private messageService: MessageService,
         private utils: UtilsService,
         private confirmationService: ConfirmationService,
+        private notificationToastService: NotificationToastService,
         private fb: FormBuilder,
     ) {
         this.loading$ = this.modulosService.loading$; // Observable boolean
@@ -92,19 +92,17 @@ export class ModulosComponent implements OnInit {
     loadData() {
         this.modulosService.findAll().subscribe({
             next: (res: StatusResponse<any>) => {
-                console.log(res);
                 if (res.ok && res.data) {
-                    this.modulos.set(res.data);
+                    const modulosMapeados = res.data.map((item: any) => this.mapToModulo(item));
+                    this.modulos.set(modulosMapeados);
                 } else {
-                    this.errorToast(this.utils.normalizeMessages(res.message));
+                    this.notificationToastService.error(this.utils.normalizeMessages(res.message));
                 }
             },
             error: (err) => {
-                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                this.notificationToastService.error(this.utils.normalizeMessages(err?.error?.message));
             }
         });
-
-
     }
 
 
@@ -128,6 +126,8 @@ export class ModulosComponent implements OnInit {
 
 
     hideDialog() {
+        this.modulo = {} as Modulo;
+        this.form.reset();
         this.moduloDialog = false;
         this.submitted = false;
     }
@@ -142,14 +142,14 @@ export class ModulosComponent implements OnInit {
                     next: (res: StatusResponse<any>) => {
                         if (res.ok) {
                             this.modulos.set(this.modulos().filter((val) => val.id !== modulo.id));
-                            this.modulo = {} as Modulo;
-                            this.successToast('Modulo Eliminado');
+                            this.hideDialog();
+                            this.notificationToastService.success('Módulo Eliminado');
                         } else {
-                            this.errorToast(this.utils.normalizeMessages(res.message));
+                            this.notificationToastService.error(this.utils.normalizeMessages(res.message));
                         }
                     },
                     error: (err) => {
-                        this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                        this.notificationToastService.error(this.utils.normalizeMessages(err?.error?.message));
                     }
                 });
             }
@@ -167,19 +167,15 @@ export class ModulosComponent implements OnInit {
                     next: (response: StatusResponse<any>) => {
                         if (response.ok) {
                             this.modulos.set(this.modulos().filter((val) => !idsToDelete.includes(val.id!)));
+                            this.notificationToastService.success('Módulos eliminados correctamente');
                             this.selectedModulos = null;
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Modulos Deleted',
-                                life: 3000
-                            });
+                            this.hideDialog();
                         } else {
-                             this.errorToast(this.utils.normalizeMessages(response.message));
+                            this.notificationToastService.error(this.utils.normalizeMessages(response.message));
                         }
                     },
                     error: (err) => {
-                        this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                        this.notificationToastService.error(this.utils.normalizeMessages(err?.error?.message));
                     }
                 });
 
@@ -195,63 +191,52 @@ export class ModulosComponent implements OnInit {
         const data = this.form.value;
 
         if (this.modulo.id) {
-            const updated = { ...this.modulo, ...data };
+            const updated = this.mapToModulo({ ...this.modulo, ...data });
 
-            this.modulosService.update(updated.id, { nombre: updated.nombre, icono: updated.icono }).subscribe({
+            this.modulosService.update(updated.id!, updated).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.modulos.set(
-                            this.modulos().map(op => op.id === this.modulo.id ? updated : op)
+                            this.modulos().map(op => op.id === res.data.id ? updated : op)
                         );
-                        this.successToast('Modulo actualizado correctamente');
+                        this.notificationToastService.success('Módulo actualizado correctamente');
+                        this.hideDialog();
                     } else {
-                        this.errorToast(this.utils.normalizeMessages(res.message));
+                        this.notificationToastService.error(this.utils.normalizeMessages(res.message));
                     }
                 },
                 error: (err) => {
-                    this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                    this.notificationToastService.error(this.utils.normalizeMessages(err?.error?.message));
                 }
             });
 
         } else {
-            
-            const newModulo = { ...data };
+
+            const newModulo = this.mapToModulo({ ...data });
 
             this.modulosService.create(newModulo).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.modulos.set([...this.modulos(), res.data]);
-                        this.successToast('Modulo creado correctamente');
+                        this.notificationToastService.success('Módulo creado correctamente');
+                        this.hideDialog();
                     } else {
-                        this.errorToast(this.utils.normalizeMessages(res.message));
+                        this.notificationToastService.error(this.utils.normalizeMessages(res.message));
                     }
                 },
                 error: (err) => {
-                    this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                    this.notificationToastService.error(this.utils.normalizeMessages(err?.error?.message));
                 }
             });
         }
-
-        this.moduloDialog = false;
     }
 
-    private successToast(message: string) {
-        this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: message,
-            life: 3000
-        });
-    }
-
-    private errorToast(message: string | string[]) {
-        const detail = Array.isArray(message) ? message.join('\n') : message;
-        this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail,
-            life: 5000
-        });
+    private mapToModulo(data: any): Modulo {
+        return {
+            id: data.id,
+            nombre: data.nombre,
+            icono: data.icono
+        };
     }
 
 }

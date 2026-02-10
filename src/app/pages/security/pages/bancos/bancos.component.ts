@@ -153,7 +153,7 @@ export class BancosComponent implements OnInit {
             header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                const idsToDelete = this.selectedBancos?.map(banco => banco.id) || [];
+                const idsToDelete = this.selectedBancos?.map(banco => banco.id).filter(id => id !== undefined) || [];
                 this.bancosService.deleteMany(idsToDelete).subscribe({
                     next: (response: StatusResponse<any>) => {
                         if (response.ok && response.data) {

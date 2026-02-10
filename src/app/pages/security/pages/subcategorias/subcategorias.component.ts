@@ -153,7 +153,7 @@ export class SubcategoriasComponent implements OnInit {
             header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                const idsToDelete = this.selectedSubcategorias?.map(subsubcategoria => subsubcategoria.id) || [];
+                const idsToDelete = this.selectedSubcategorias?.map(subsubcategoria => subsubcategoria.id).filter(id => id !== undefined) || [];
                 this.subcategoriaService.deleteMany(idsToDelete).subscribe({
                     next: (response: StatusResponse<any>) => {
                         if (response.ok && response.data) {

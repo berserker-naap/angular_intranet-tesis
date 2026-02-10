@@ -279,7 +279,7 @@ export class PersonasComponent implements OnInit {
             header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                const idsToDelete = this.selectedPersonas?.map(persona => persona.id) || [];
+                const idsToDelete = this.selectedPersonas?.map(persona => persona.id).filter(id => id !== undefined) || [];
                 this.personasService.deleteMany(idsToDelete).subscribe({
                     next: (response: StatusResponse<any>) => {
                         if (response.ok) {

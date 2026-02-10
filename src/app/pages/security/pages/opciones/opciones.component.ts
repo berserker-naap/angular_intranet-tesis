@@ -181,7 +181,7 @@ export class OpcionesComponent implements OnInit {
             header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                const idsToDelete = this.selectedOpciones?.map(opcion => opcion.id) || [];
+                const idsToDelete = this.selectedOpciones?.map(opcion => opcion.id).filter(id => id !== undefined) || [];
                 this.opcionesService.deleteMany(idsToDelete).subscribe({
                     next: (response: StatusResponse<any>) => {
                         if (response.ok) {

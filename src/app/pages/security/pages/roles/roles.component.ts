@@ -184,7 +184,7 @@ export class RolesComponent implements OnInit {
             header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                const idsToDelete = this.selectedRoles?.map(rol => rol.id) || [];
+                const idsToDelete = this.selectedRoles?.map(rol => rol.id).filter(id => id !== undefined) || [];
                 this.rolesService.deleteMany(idsToDelete).subscribe({
                     next: (response: StatusResponse<any>) => {
                         if (response.ok) {
@@ -205,7 +205,7 @@ export class RolesComponent implements OnInit {
         });
     }
 
-    
+
     saveUpdateRol() {
         this.submitted = true;
         if (this.form.invalid) return;
