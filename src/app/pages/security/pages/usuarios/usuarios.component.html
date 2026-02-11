@@ -15,19 +15,38 @@
                 </th>
                 <th pSortableColumn="nombre">Login <p-sortIcon field="login" /></th>
                 <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
+                <th pSortableColumn="roles">Roles <p-sortIcon field="roles" /></th>
                 <th>Acciones</th>
             </tr>
         </ng-template>
 
         <ng-template #body let-usuario>
             <tr>
+                <td><p-tableCheckbox [value]="usuario" /></td>
                 <td>{{ usuario.login }}</td>
                 <td>{{ usuario.persona?.nombre }} {{ usuario.persona?.apellido }}</td>
                 <td>
                     <p-tag *ngFor="let rol of usuario.roles" [value]="rol.nombre" class="mr-1" />
                 </td>
                 <td>
-                    <p-button icon="pi pi-user-edit" label="Asignar Roles" (click)="abrirAsignarRoles(usuario)" />
+                    <p-button
+                        icon="pi pi-sitemap"
+                        severity="secondary"
+                        rounded
+                        outlined
+                        class="mr-2"
+                        title="Asignar roles"
+                        ariaLabel="Asignar roles"
+                        (click)="abrirAsignarRoles(usuario)" />
+                    <p-button
+                        icon="pi pi-key"
+                        severity="warn"
+                        rounded
+                        outlined
+                        class="mr-2"
+                        title="Resetear contraseÃ±a"
+                        ariaLabel="Resetear contraseÃ±a"
+                        (click)="resetPassword(usuario)" />
                     <p-button icon="pi pi-pencil" severity="info" rounded outlined class="mr-2"
                         (click)="openEdit(usuario)" />
                     <p-button icon="pi pi-trash" severity="danger" rounded outlined (click)="deleteUsuario(usuario)" />
@@ -45,12 +64,18 @@
                 <div>
                     <label class="block font-bold mb-2">Login</label>
                     <input pInputText formControlName="login" class="w-full" />
+                    <small class="text-red-500" *ngIf="submitted && form.get('login')?.invalid">
+                        El login es obligatorio.
+                    </small>
                 </div>
 
                 <div>
                     <label class="block font-bold mb-2">Password</label>
                     <input pInputText formControlName="password" type="password" class="w-full" toggleMask="true"
                         [disabled]="isEditMode" [ngClass]="{ 'bg-gray-200': isEditMode }" />
+                    <small class="text-red-500" *ngIf="submitted && !isEditMode && form.get('password')?.invalid">
+                        El password es obligatorio.
+                    </small>
                 </div>
 
                 <div>
@@ -60,7 +85,8 @@
                     </label>
                 </div>
 
-                <div [hidden]="!crearPersona" [formGroup]="personaForm" class="gap-6" [ngStyle]="crearPersona ? {'display': 'flex', 'flexDirection': 'column'} : {}">
+                <div [hidden]="!crearPersona" [formGroup]="personaForm" class="gap-6"
+                    [ngStyle]="crearPersona ? {'display': 'flex', 'flexDirection': 'column'} : {}">
                     <!-- Nombre -->
                     <div>
                         <label for="nombre" class="block font-bold mb-2">Nombre</label>
@@ -82,7 +108,7 @@
                     <!-- Tipo de Documento -->
                     <div>
                         <label for="idTipoDocumentoIdentidad" class="block font-bold mb-2">Tipo de Documento</label>
-                        <p-dropdown id="idTipoDocumentoIdentidad" formControlName="idTipoDocumentoIdentidad"
+                        <p-select id="idTipoDocumentoIdentidad" formControlName="idTipoDocumentoIdentidad"
                             [options]="tipoDocumentos" optionLabel="nombre" optionValue="id"
                             placeholder="Seleccione un Tipo de Documento" class="w-full" />
                         <small class="text-red-500"
@@ -114,21 +140,36 @@
 
                 <div [hidden]="crearPersona">
                     <label class="block font-bold mb-2">Persona existente</label>
-                    <p-dropdown placeholder="Seleccione una persona existente" [options]="personas" optionLabel="nombre"
-                        optionValue="id" formControlName="idPersona"></p-dropdown>
+                    <p-select placeholder="Seleccione una persona existente" [options]="personas" optionLabel="nombre"
+                        optionValue="id" formControlName="idPersona"></p-select>
+                    <small class="text-red-500 w-100" *ngIf="submitted && !crearPersona && form.get('idPersona')?.invalid">
+                        La persona es obligatoria.
+                    </small>
                 </div>
 
                 <div class="mb-6">
                     <label class="block font-bold mb-2">Roles</label>
                     <div class="card px-0" style="padding-left: 0px;padding-right: 0px;">
-                        <p-pickList [source]="rolesDisponibles" [target]="rolesAsignados" optionLabel="nombre"
-                            [responsive]="true" breakpoint="750px" dragdrop="false" [metaKeySelection]="false"
-                            sourceHeader="Roles" targetHeader="Asignados" (onMoveToTarget)="onAsignarRoles($event)"
-                            (onMoveToSource)="onQuitarRoles($event)">
-                            <ng-template let-item pTemplate="item">
-                                {{ item.nombre }}
+                        <p-table [value]="allRoles">
+                            <ng-template pTemplate="header">
+                                <tr>
+                                    <th>Asignar</th>
+                                    <th>Rol</th>
+                                </tr>
                             </ng-template>
-                        </p-pickList>
+
+                            <ng-template pTemplate="body" let-role>
+                                <tr>
+                                    <td>
+                                        <p-checkbox [binary]="true" [ngModel]="isRolAsignado(role)"
+                                            [ngModelOptions]="{ standalone: true }"
+                                            (onChange)="toggleRol(role)"></p-checkbox>
+                                    </td>
+                                    <td>{{ role.nombre }}</td>
+                                </tr>
+                            </ng-template>
+                        </p-table>
+
                     </div>
                 </div>
 
@@ -143,6 +184,53 @@
     </ng-template>
 
 </p-dialog>
+
+
+<p-dialog header="Asignar Roles" [(visible)]="rolesDialog" [modal]="true" [style]="{ width: '650px' }"   (onHide)="cerrarRolesDialog()">
+  <ng-template #content>
+
+    <div class="mb-3">
+      <b>Usuario:</b> {{ usuarioRolesTarget?.login }}
+    </div>
+
+    <div class="card px-0" style="padding-left: 0px; padding-right: 0px;">
+      <p-table [value]="allRoles">
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 120px;">Asignar</th>
+            <th>Rol</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-role>
+          <tr>
+            <td>
+              <p-checkbox
+                [binary]="true"
+                [ngModel]="isRolAsignado(role)"
+                [ngModelOptions]="{ standalone: true }"
+                (onChange)="toggleRol(role)">
+              </p-checkbox>
+            </td>
+            <td>{{ role.nombre }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+  </ng-template>
+
+  <ng-template #footer>
+      <p-button
+    label="Cancelar"
+    icon="pi pi-times"
+    text
+    (click)="cerrarRolesDialog()">
+  </p-button>
+    <p-button label="Guardar Roles" icon="pi pi-check" (click)="guardarRoles()"></p-button>
+  </ng-template>
+</p-dialog>
+
 
 <p-toast position="top-right"></p-toast>
 <p-confirmdialog [style]="{ width: '450px' }" />

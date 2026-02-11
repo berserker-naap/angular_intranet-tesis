@@ -28,15 +28,48 @@ export class UsuariosService {
         );
     }
 
+    findOne(id: number): Observable<StatusResponse<any>> {
+        return this.withLoading(
+            this.http.get<StatusResponse<any>>(`${this.apiUrl}/${id}`)
+        );
+    }
+
     create(data: any): Observable<StatusResponse<any>> {
         return this.withLoading(
             this.http.post<StatusResponse<any>>(this.apiUrl, data)
         );
     }
 
-    asignarRoles(idUsuario: number, roles: number[]): Observable<StatusResponse<any>> {
+    update(id: number, data: any): Observable<StatusResponse<any>> {
         return this.withLoading(
-            this.http.post<StatusResponse<any>>(`${this.apiUrl}/${idUsuario}/roles`, { roles })
+            this.http.patch<StatusResponse<any>>(`${this.apiUrl}/${id}`, data)
+        );
+    }
+
+    delete(id: number): Observable<StatusResponse<any>> {
+        return this.withLoading(
+            this.http.delete<StatusResponse<any>>(`${this.apiUrl}/${id}`)
+        );
+    }
+
+    deleteMany(ids: number[]): Observable<StatusResponse<any>> {
+        return this.withLoading(
+            this.http.post<StatusResponse<any>>(`${this.apiUrl}/delete-many`, { ids })
+        );
+    }
+
+    updateRoles(idUsuario: number, roles: { id: number }[]) {
+        return this.withLoading(
+            this.http.put<StatusResponse<any>>(
+                `${this.apiUrl}/${idUsuario}/roles`,
+                { roles }
+            )
+        );
+    }
+
+    resetPassword(idUsuario: number): Observable<StatusResponse<any>> {
+        return this.withLoading(
+            this.http.post<StatusResponse<any>>(`${this.apiUrl}/${idUsuario}/reset-password`, {})
         );
     }
 }

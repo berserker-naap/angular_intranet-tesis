@@ -1,17 +1,21 @@
+export interface Persona {
+  id: number;
+  nombre: string;
+  apellido: string | null;
+  idTipoDocumentoIdentidad?: number | null;
+  documentoIdentidad?: string | null;
+  fechaNacimiento?: Date | string | null;
+}
+
+export interface Rol {
+  id: number;
+  nombre: string;
+}
+
 export interface Usuario {
-  id?: number | null; // null cuando es nuevo, number cuando existe
+  id?: number;
   login: string;
-  password?: string | null;
-  persona?: {
-    id: number;
-    nombre: string;
-    apellido: string | null;
-    idTipoDocumentoIdentidad?: number | null;
-    documentoIdentidad?: string;
-    fechaNacimiento?: Date | null;
-  } | null; // Puede ser null si no hay persona
-  roles: {
-    id: number;
-    nombre: string;
-  }[];
+  password?: string;
+  persona?: Persona | null;
+  roles?: Rol[];
 }
