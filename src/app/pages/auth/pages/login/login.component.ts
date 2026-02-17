@@ -8,7 +8,7 @@ import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { StatusResponse } from '../../../../shared/interface/status-response.interface';
-import { LoginDataResponse } from '../../interfaces';
+import { SessionResponseDto } from '../../interfaces';
 import { UtilsService } from '../../../../shared/services/utils.service';
 import { Observable } from 'rxjs';
 
@@ -50,12 +50,13 @@ export class LoginComponent {
             login: this.form.value.login,
             password: this.form.value.password
         }).subscribe({
-            next: (response: StatusResponse<LoginDataResponse>) => {
-                if (response.ok && response.data?.token) {
-                    this.authService.storeToken(response.data.token, this.form.value.remember);
+            next: (response: StatusResponse<SessionResponseDto>) => {
+                const persisted = this.authService.persistSessionFromResponse(response, this.form.value.remember);
+
+                if (persisted) {
                     this.router.navigate(['/']);
                 } else {
-                    this.errorMessages = this.utils.normalizeMessages(response.message);
+                    this.errorMessages = this.utils.normalizeMessages(response?.message ?? 'No se pudo iniciar sesion.');
                 }
             },
             error: (err) => {

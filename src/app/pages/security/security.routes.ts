@@ -11,11 +11,6 @@ export const SECURITY_ROUTES: Routes = [
                     import('./pages/usuarios/usuarios.component').then(m => m.UsuariosComponent),
             },
             {
-                path: 'persona',
-                loadComponent: () =>
-                    import('./pages/personas/personas.component').then(m => m.PersonasComponent),
-            },
-            {
                 path: 'multitabla',
                 loadComponent: () =>
                     import('./pages/multitabla/multitabla.component').then(m => m.MultitablaComponent),
