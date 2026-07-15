@@ -1,6 +1,6 @@
 <p-toast></p-toast>
 <p-confirmDialog></p-confirmDialog>
-<app-loading-overlay [visible]="(loading$ | async) ?? false"></app-loading-overlay>
+<app-loading-overlay [loading]="(loading$ | async) ?? false"></app-loading-overlay>
 
 <div class="card">
     <p-toolbar styleClass="mb-4">
