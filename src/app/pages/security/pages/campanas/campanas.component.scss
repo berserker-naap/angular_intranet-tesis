@@ -1,0 +1,89 @@
+:host {
+    display: block;
+}
+
+.toolbar-title h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1.4rem;
+}
+
+.toolbar-title p {
+    margin: 0;
+    color: var(--text-color-secondary);
+}
+
+.message-cell {
+    max-width: 28rem;
+    white-space: normal;
+    line-height: 1.35;
+}
+
+.deeplink {
+    font-family: var(--font-family);
+    color: var(--primary-color);
+}
+
+.deeplink.empty {
+    color: var(--text-color-secondary);
+}
+
+.action-group {
+    display: inline-flex;
+    gap: 0.35rem;
+}
+
+.campaign-form {
+    display: grid;
+    gap: 1rem;
+}
+
+.field {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.field label {
+    font-weight: 600;
+}
+
+.field small {
+    color: var(--text-color-secondary);
+}
+
+.field .error {
+    color: var(--red-500);
+}
+
+.switch-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.switch-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--surface-border);
+    border-radius: 1rem;
+    background: var(--surface-50);
+}
+
+.switch-card p {
+    margin: 0.35rem 0 0;
+    color: var(--text-color-secondary);
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .switch-card {
+        align-items: flex-start;
+    }
+}

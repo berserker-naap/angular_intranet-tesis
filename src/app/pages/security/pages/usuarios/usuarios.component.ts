@@ -115,6 +115,10 @@ export class UsuariosComponent implements OnInit {
         this.getTipoDocumentos();
     }
 
+    private normalizeLogin(value: string | null | undefined): string {
+        return `${value ?? ""}`.trim().toLowerCase();
+    }
+
     // =========================
     // CARGA DE DATA
     // =========================
@@ -351,7 +355,7 @@ export class UsuariosComponent implements OnInit {
         const data = this.form.getRawValue();
 
         const payload: any = {
-            login: data.login,
+            login: this.normalizeLogin(data.login),
             roles: (this.rolesAsignados || []).map((r: any) => {
                 const id = r?.id;
                 const nombre = r?.nombre ?? this.allRoles?.find((ar: any) => (ar?.id) === id)?.nombre;

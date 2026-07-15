@@ -40,6 +40,11 @@ export const SECURITY_ROUTES: Routes = [
                 loadComponent: () =>
                     import('./pages/acciones/acciones.component').then(m => m.AccionesComponent),
             },
+            {
+                path: 'campanas',
+                loadComponent: () =>
+                    import('./pages/campanas/campanas.component').then(m => m.CampanasComponent),
+            },
 
         ]
     }

@@ -18,12 +18,20 @@ export class AuthService {
 
     constructor(private http: HttpClient) { }
 
+    private normalizeLogin(value: string | null | undefined): string {
+        return `${value ?? ''}`.trim().toLowerCase();
+    }
+
     login(credentials: { login: string; password: string }): Observable<StatusResponse<SessionResponseDto> | any> {
         this._loading.next(true);
+        const payload = {
+            ...credentials,
+            login: this.normalizeLogin(credentials.login),
+        };
 
         return this.http.post<StatusResponse<SessionResponseDto> | any>(
             `${this.authApiUrl}/login`,
-            credentials
+            payload
         ).pipe(
             finalize(() =>
                 setTimeout(() => this._loading.next(false), 100)

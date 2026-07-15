@@ -58,6 +58,12 @@ export class AppMenu {
                 ]
             },
             {
+                label: 'Comunicaciones',
+                items: [
+                    { label: 'Campañas', icon: 'pi pi-fw pi-megaphone', routerLink: ['security/campanas'] },
+                ]
+            },
+            {
                 label: 'REPORTES',
                 items: [
                     { label: 'Consultas', icon: 'pi pi-fw pi-home', routerLink: ['security/usuario'] },
