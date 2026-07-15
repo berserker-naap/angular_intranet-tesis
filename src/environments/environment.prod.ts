@@ -1,10 +1,10 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api-tesisunt.azurewebsites.net/api',
-  apiUrlAuth: 'https://api-tesisunt.azurewebsites.net/api/auth',
-  apiUrlSecurity: 'https://api-tesisunt.azurewebsites.net/api/security',
-  apiUrlBusinessparam: 'https://api-tesisunt.azurewebsites.net/api/businessparam',
-  apiUrlMessaging: 'https://api-tesisunt.azurewebsites.net/api/integrations/messaging',
+  apiUrl: 'https://api.tu-dominio.com',
+  apiUrlAuth: 'https://api.tu-dominio.com/api/auth',
+  apiUrlSecurity: 'https://api.tu-dominio.com/api/security',
+  apiUrlBusinessparam: 'https://api.tu-dominio.com/api/businessparam',
+  apiUrlMessaging: 'https://api.tu-dominio.com/api/integrations/messaging',
   checkStatusEndpoint: '/auth/check-status',
   loginEndpoint: '/auth/login'
 };
