@@ -126,7 +126,7 @@ export class CampanasComponent implements OnInit {
                 next: (response: StatusResponse<CampaignaItem>) => {
                     if (response.ok && response.data) {
                         this.campaigns.set(
-                            this.campaigns().map(item => item.id === response.data.id ? response.data : item)
+                            this.campaigns().map(item => item.id === (response.data as CampaignaItem).id ? (response.data as CampaignaItem) : item)
                         );
                         this.notificationToastService.success('Campaña actualizada correctamente.');
                         this.hideDialog();
@@ -172,7 +172,7 @@ export class CampanasComponent implements OnInit {
                     next: (response: StatusResponse<CampaignaItem>) => {
                         if (response.ok && response.data) {
                             this.campaigns.set(
-                                this.campaigns().map(item => item.id === response.data.id ? response.data : item)
+                                this.campaigns().map(item => item.id === (response.data as CampaignaItem).id ? (response.data as CampaignaItem) : item)
                             );
                             this.notificationToastService.success('Campaña enviada correctamente.');
                             return;
