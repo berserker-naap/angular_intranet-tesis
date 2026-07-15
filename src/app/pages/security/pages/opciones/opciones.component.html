@@ -4,7 +4,7 @@
             <h1 class="font-semibold text-xl mb-0">Opciones</h1>
             <div>
                 <p-button label="Nuevo" icon="pi pi-plus" severity="success" class="mr-2" (click)="openNew()" />
-                <p-button label="Exportar" icon="pi pi-upload" severity="secondary" (click)="exportCSV()" />
+                <p-button label="Exportar" icon="pi pi-upload" severity="secondary" (click)="exportExcel()" />
             </div>
         </div>
         <hr>
@@ -23,7 +23,7 @@
         </div>
 
         <p-table #dt [value]="opciones()" [paginator]="true" [rows]="10" [tableStyle]="{ 'min-width': '60rem' }"
-            [rowHover]="true" [rowsPerPageOptions]="[10, 20, 30]" [globalFilterFields]="['nombre', 'path']"
+            [rowHover]="true" [rowsPerPageOptions]="[10, 20, 30]" [globalFilterFields]="['modulo.nombre', 'nombre', 'path']"
             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} opciones"
             [(selection)]="selectedOpciones" dataKey="id">
 
@@ -32,8 +32,8 @@
                     <th style="width: 3rem">
                         <p-tableHeaderCheckbox />
                     </th>
-                    <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
-                    <th pSortableColumn="moduloNombre">Modulo <p-sortIcon field="moduloNombre" /></th>
+                    <th pSortableColumn="modulo.nombre">Modulo <p-sortIcon field="modulo.nombre" /></th>
+                    <th pSortableColumn="nombre">Opcion <p-sortIcon field="nombre" /></th>
                     <th pSortableColumn="path">Path <p-sortIcon field="path" /></th>
                     <th>Visible en navegación</th>
                     <th>Acciones</th>
@@ -43,8 +43,8 @@
             <ng-template #body let-opcion>
                 <tr>
                     <td><p-tableCheckbox [value]="opcion" /></td>
-                    <td>{{ opcion.nombre }}</td>
                     <td>{{ opcion.modulo?.nombre ?? '-' }}</td>
+                    <td>{{ opcion.nombre }}</td>
                     <td>{{ opcion.path }}</td>
                     <td>
                         <p-tag [value]="opcion.isVisibleNavegacion ? 'Sí' : 'No'"

@@ -4,7 +4,6 @@
             <h1 class="font-semibold text-xl mb-0">Modulos</h1>
             <div>
                 <p-button label="Nuevo" icon="pi pi-plus" severity="success" class="mr-2" (click)="openNew()" />
-                <p-button label="Exportar" icon="pi pi-upload" severity="secondary" (click)="exportCSV()" />
             </div>
         </div>
         <hr>
@@ -34,6 +33,7 @@
                     </th>
                     <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
                     <th pSortableColumn="icono">Icono <p-sortIcon field="icono" /></th>
+                    <th>Vista Icono</th>
                     <th>Acciones</th>
                 </tr>
             </ng-template>
@@ -43,6 +43,7 @@
                     <td><p-tableCheckbox [value]="modulo" /></td>
                     <td>{{ modulo.nombre }}</td>
                     <td>{{ modulo.icono }}</td>
+                    <td><span [innerHTML]="modulo.icono"></span></td>
                     <td>
                         <p-button icon="pi pi-pencil" severity="info" rounded outlined class="mr-2"
                             (click)="openEdit(modulo)" />
@@ -88,3 +89,5 @@
 </p-dialog>
 <p-toast position="top-right"></p-toast>
 <p-confirmdialog [style]="{ width: '450px' }" />
+
+<app-loading-overlay [loading]="(loading$ | async) ?? false" />

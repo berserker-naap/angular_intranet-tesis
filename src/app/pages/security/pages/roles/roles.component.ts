@@ -24,16 +24,11 @@ import { InputSwitchModule } from 'primeng/inputswitch';
 import { RolesService } from '../../services/roles.service';
 import { Observable } from 'rxjs';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
-interface Column {
-    field: string;
-    header: string;
-    customExportHeader?: string;
-}
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
+import { Rol } from './interfaces/rol.interface';
 
-interface ExportColumn {
-    title: string;
-    dataKey: string;
-}
+
 
 @Component({
     selector: 'app-roles',
@@ -67,14 +62,11 @@ interface ExportColumn {
 })
 export class RolesComponent implements OnInit {
     rolDialog: boolean = false;
-    roles = signal<any[]>([]);
-    rol!: any;
-    selectedRoles!: any[] | null;
+    roles = signal<Rol[]>([]);
+    rol!: Rol;
+    selectedRoles!: Rol[] | null;
     submitted: boolean = false;
-    statuses!: any[];
     @ViewChild('dt') dt!: Table;
-    exportColumns!: ExportColumn[];
-    cols!: Column[];
     form!: FormGroup;
     loading$: Observable<boolean> = new Observable<boolean>( observer => observer.next(false)); // Observable boolean
     constructor(
@@ -93,7 +85,7 @@ export class RolesComponent implements OnInit {
     }
 
 
-    buildForm(rol: any = {}) {
+    buildForm(rol: Rol = {} as Rol) {
         this.form = this.fb.group({
             nombre: [rol.nombre || '', Validators.required],
             descripcion: [rol.descripcion || '', Validators.required],
@@ -103,120 +95,114 @@ export class RolesComponent implements OnInit {
 
     loadData() {
         this.rolesService.findAll().subscribe({
-            next: (res: StatusResponse<any>) => {
-                console.log(res);
+            next: (res: StatusResponse<Rol[]>) => {
                 if (res.ok && res.data) {
                     this.roles.set(res.data);
                 } else {
                     this.errorToast(this.utils.normalizeMessages(res.message));
-                        console.warn(this.utils.normalizeMessages(res.message));   }
+                }
             },
             error: (err) => {
-                  this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                    console.warn(this.utils.normalizeMessages(err?.error?.message)); }
+                this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+            }
         });
-
-        // this.cols = [
-        //     { field: 'Nombre', header: 'Name' },
-        //     { field: 'image', header: 'Image' },
-        //     { field: 'price', header: 'Price' },
-        //     { field: 'category', header: 'Category' }
-        // ];
-
-        // this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
     }
 
-    exportCSV() {
-        // this.dt.exportCSV();
+
+    exportExcel() {
+        // Generar datos planos para exportar
+        const exportData = this.roles().map(rol => ({
+            Nombre: rol.nombre,
+            Descripcion: rol.descripcion
+        }));
+        const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook: XLSX.WorkBook = { Sheets: { 'Roles': worksheet }, SheetNames: ['Roles'] };
+        const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        this.saveAsExcelFile(excelBuffer, 'roles');
     }
 
+    saveAsExcelFile(buffer: any, fileName: string): void {
+        const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+        const EXCEL_EXTENSION = '.xlsx';
+        const data: Blob = new Blob([buffer], { type: EXCEL_TYPE });
+        FileSaver.saveAs(data, fileName + '_export_' + new Date().getTime() + EXCEL_EXTENSION);
+    }
     onGlobalFilter(table: Table, event: Event) {
         table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
     }
 
     openNew() {
-        this.rol = {};
+        this.rol = {} as Rol;
         this.submitted = false;
         this.buildForm(); // <- Aquí
         this.rolDialog = true;
     }
 
-    openEdit(rol: any) {
+    openEdit(rol: Rol) {
         this.rol = { ...rol };
-        this.buildForm(this.rol); // <- Aquí
+        this.buildForm(this.rol);
         this.rolDialog = true;
     }
 
-
-    deleteSelectedRoles() {
-        this.confirmationService.confirm({
-            message: '¿Estas seguro de eliminar las roles seleccionadas?',
-            header: 'Confirmar',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                const idsToDelete = this.selectedRoles?.map(rol => rol.id) || [];
-                this.rolesService.deleteMany(idsToDelete).subscribe({
-                    next: (response: StatusResponse<any>) => {
-                        if (response.ok && response.data) {
-                            console.log(response);
-                            this.roles.set(this.roles().filter((val) => !this.selectedRoles?.includes(val)));
-                            this.selectedRoles = null;
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Roles Deleted',
-                                life: 3000
-                            });
-                        } else {
-                            console.warn(this.utils.normalizeMessages(response.message));
-                        }
-                    },
-                    error: (err) => {
-                        console.warn(this.utils.normalizeMessages(err?.error?.message));
-                    }
-                });
-
-
-            }
-        });
-    }
 
     hideDialog() {
         this.rolDialog = false;
         this.submitted = false;
     }
 
-    deleteRol(rol: any) {
+    deleteRol(rol: Rol) {
         this.confirmationService.confirm({
-            message: '¿Estas seguro de eliminar esta rol ' + rol.nombre + '?',
+            message: '¿Estás seguro de eliminar este rol ' + rol.nombre + '?',
             header: 'Confirmar',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                this.rolesService.delete(rol.id).subscribe({
+                this.rolesService.delete(rol.id!).subscribe({
                     next: (res: StatusResponse<any>) => {
-                        if (res.ok && res.data) {
+                        if (res.ok) {
                             this.roles.set(this.roles().filter((val) => val.id !== rol.id));
-                            this.rol = {};
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Roles Deleted',
-                                life: 3000
-                            });
+                            this.rol = {} as Rol;
+                            this.successToast('Rol eliminado correctamente');
                         } else {
                             this.errorToast(this.utils.normalizeMessages(res.message));
-                            console.warn(this.utils.normalizeMessages(res.message));
                         }
                     },
                     error: (err) => {
                         this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                        console.warn(this.utils.normalizeMessages(err?.error?.message));
                     }
                 });
 
             }
         });
     }
+
+
+    deleteSelectedRoles() {
+        this.confirmationService.confirm({
+            message: '¿Estás seguro de eliminar los roles seleccionados?',
+            header: 'Confirmar',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                const idsToDelete = this.selectedRoles?.map(rol => rol.id!).filter(id => id !== undefined) || [];
+                this.rolesService.deleteMany(idsToDelete).subscribe({
+                    next: (response: StatusResponse<any>) => {
+                        if (response.ok) {
+                            this.roles.set(this.roles().filter((val) => !idsToDelete.includes(val.id!)));
+                            this.selectedRoles = null;
+                            this.successToast('Roles eliminados correctamente');
+                        } else {
+                            this.errorToast(this.utils.normalizeMessages(response.message));
+                        }
+                    },
+                    error: (err) => {
+                        this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                    }
+                });
+
+
+            }
+        });
+    }
+
 
     saveUpdateRol() {
         this.submitted = true;
@@ -225,15 +211,14 @@ export class RolesComponent implements OnInit {
         const data = this.form.value;
 
         if (this.rol.id) {
-            const updated = { ...this.rol, ...data };
-
-            this.rolesService.update(updated.id, {nombre: updated.nombre , descripcion : updated.descripcion}).subscribe({
+            this.rolesService.update(this.rol.id, data).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.roles.set(
-                            this.roles().map(op => op.id === this.rol.id ? updated : op)
+                            this.roles().map(op => op.id === res.data.id ? res.data : op)
                         );
-                        this.successToast('Opción actualizada correctamente');
+                        this.successToast('Rol actualizado correctamente');
+                        this.hideDialog();
                     } else {
                         this.errorToast(this.utils.normalizeMessages(res.message));
                     }
@@ -244,26 +229,21 @@ export class RolesComponent implements OnInit {
             });
 
         } else {
-            const newRol = { ...data };
-
-            this.rolesService.create(newRol).subscribe({
+            this.rolesService.create(data).subscribe({
                 next: (res) => {
                     if (res.ok && res.data) {
                         this.roles.set([...this.roles(), res.data]);
-                        this.successToast('Opción creada correctamente');
+                        this.successToast('Rol creado correctamente');
+                        this.hideDialog();
                     } else {
                         this.errorToast(this.utils.normalizeMessages(res.message));
-                        console.warn(this.utils.normalizeMessages(res.message));
                     }
                 },
                 error: (err) => {
                     this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                    console.warn(this.utils.normalizeMessages(err?.error?.message));
                 }
             });
         }
-
-        this.rolDialog = false;
     }
 
     private successToast(message: string) {

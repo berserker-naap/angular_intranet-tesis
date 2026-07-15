@@ -1,0 +1,153 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+<app-loading-overlay [visible]="(loading$ | async) ?? false"></app-loading-overlay>
+
+<div class="card">
+    <p-toolbar styleClass="mb-4">
+        <ng-template #start>
+            <div class="toolbar-title">
+                <h2>Campañas de notificación</h2>
+                <p>Envía campañas masivas por push y publícalas en la bandeja interna de la app.</p>
+            </div>
+        </ng-template>
+        <ng-template #end>
+            <p-button label="Nueva campaña" icon="pi pi-plus" (click)="openNew()"></p-button>
+        </ng-template>
+    </p-toolbar>
+
+    <p-iconfield iconPosition="left" class="mb-4 block">
+        <p-inputicon styleClass="pi pi-search"></p-inputicon>
+        <input
+            pInputText
+            type="text"
+            (input)="onGlobalFilter(dt, $event)"
+            placeholder="Buscar campaña por título o mensaje"
+            class="w-full"
+        />
+    </p-iconfield>
+
+    <p-table
+        #dt
+        [value]="campaigns()"
+        [paginator]="true"
+        [rows]="10"
+        [rowHover]="true"
+        [tableStyle]="{ 'min-width': '75rem' }"
+        dataKey="id"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} campañas"
+        [showCurrentPageReport]="true"
+        [globalFilterFields]="['title', 'message', 'deepLink', 'status']"
+    >
+        <ng-template #header>
+            <tr>
+                <th>Título</th>
+                <th>Mensaje</th>
+                <th>Canal</th>
+                <th>Deep link</th>
+                <th>Estado</th>
+                <th>Enviado</th>
+                <th class="text-right">Acciones</th>
+            </tr>
+        </ng-template>
+        <ng-template #body let-campaign>
+            <tr>
+                <td>
+                    <div class="font-semibold">{{ campaign.title }}</div>
+                    <small>#{{ campaign.id }}</small>
+                </td>
+                <td>
+                    <div class="message-cell">{{ campaign.message }}</div>
+                </td>
+                <td>{{ getChannelsLabel(campaign) }}</td>
+                <td>
+                    <span class="deeplink" [class.empty]="!campaign.deepLink">
+                        {{ campaign.deepLink || 'Sin deep link' }}
+                    </span>
+                </td>
+                <td>
+                    <p-tag [value]="campaign.status" [severity]="getStatusSeverity(campaign.status)"></p-tag>
+                </td>
+                <td>{{ formatDate(campaign.sentAt) }}</td>
+                <td class="text-right">
+                    <div class="action-group">
+                        <p-button
+                            icon="pi pi-pencil"
+                            [text]="true"
+                            [rounded]="true"
+                            severity="secondary"
+                            (click)="openEdit(campaign)"
+                            [disabled]="campaign.status === 'SENT'"
+                        ></p-button>
+                        <p-button
+                            icon="pi pi-send"
+                            [text]="true"
+                            [rounded]="true"
+                            severity="contrast"
+                            (click)="sendCampaign(campaign)"
+                            [disabled]="campaign.status === 'SENT'"
+                        ></p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<p-dialog
+    [(visible)]="campaignDialog"
+    [style]="{ width: '42rem' }"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [header]="selectedCampaign ? 'Editar campaña' : 'Nueva campaña'"
+    (onHide)="hideDialog()"
+>
+    <form [formGroup]="form" class="campaign-form">
+        <div class="field">
+            <label for="title">Título</label>
+            <input id="title" pInputText formControlName="title" maxlength="120" />
+            <small class="error" *ngIf="submitted && form.get('title')?.invalid">Ingresa un título válido.</small>
+        </div>
+
+        <div class="field">
+            <label for="message">Mensaje</label>
+            <textarea
+                id="message"
+                pTextarea
+                rows="5"
+                formControlName="message"
+                maxlength="500"
+            ></textarea>
+            <small class="error" *ngIf="submitted && form.get('message')?.invalid">Ingresa un mensaje válido.</small>
+        </div>
+
+        <div class="field">
+            <label for="deepLink">Deep link</label>
+            <input id="deepLink" pInputText formControlName="deepLink" maxlength="500" placeholder="/tabs/principal" />
+            <small>Ejemplo: <strong>/tabs/principal</strong>, <strong>/tabs/transacciones</strong>.</small>
+        </div>
+
+        <div class="switch-grid">
+            <div class="switch-card">
+                <div>
+                    <strong>Enviar push</strong>
+                    <p>Dispara la notificación al dispositivo mediante Azure Notification Hubs.</p>
+                </div>
+                <p-inputSwitch formControlName="sendPush"></p-inputSwitch>
+            </div>
+
+            <div class="switch-card">
+                <div>
+                    <strong>Publicar en bandeja</strong>
+                    <p>Muestra la campaña en la campana de notificaciones dentro de la app.</p>
+                </div>
+                <p-inputSwitch formControlName="publishInApp"></p-inputSwitch>
+            </div>
+        </div>
+
+        <div class="dialog-actions">
+            <p-button label="Cancelar" severity="secondary" [text]="true" (click)="hideDialog()"></p-button>
+            <p-button label="Guardar" icon="pi pi-check" (click)="saveCampaign()"></p-button>
+        </div>
+    </form>
+</p-dialog>

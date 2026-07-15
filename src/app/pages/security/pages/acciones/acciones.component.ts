@@ -24,16 +24,9 @@ import { InputSwitchModule } from 'primeng/inputswitch';
 import { AccionesService } from '../../services/acciones.service';
 import { Observable } from 'rxjs';
 import { LoadingOverlayComponent } from '../../../../shared/components/loading-overlay/loading-overlay.component';
-interface Column {
-    field: string;
-    header: string;
-    customExportHeader?: string;
-}
+import { NotificationToastService } from '../../../../shared/services/notification-toast.service';
+import { Accion } from './interface/accion.interface';
 
-interface ExportColumn {
-    title: string;
-    dataKey: string;
-}
 
 @Component({
     selector: 'app-acciones',
@@ -63,28 +56,24 @@ interface ExportColumn {
     ],
     templateUrl: './acciones.component.html',
     styleUrls: ['./acciones.component.scss'],
-    providers: [MessageService, ConfirmationService]
 })
 export class AccionesComponent implements OnInit {
     accionDialog: boolean = false;
-    acciones = signal<any[]>([]);
-    accion!: any;
-    selectedAcciones!: any[] | null;
+    acciones = signal<Accion[]>([]);
+    accion!: Accion;
+    selectedAcciones!: Accion[] | null;
     submitted: boolean = false;
-    statuses!: any[];
     @ViewChild('dt') dt!: Table;
-    exportColumns!: ExportColumn[];
-    cols!: Column[];
     form!: FormGroup;
-    loading$: Observable<boolean> = new Observable<boolean>( observer => observer.next(false)); // Observable boolean
+    loading$: Observable<boolean> = new Observable<boolean>(observer => observer.next(false)); // Observable boolean
     constructor(
         private accionesService: AccionesService,
-        private messageService: MessageService,
         private utils: UtilsService,
         private confirmationService: ConfirmationService,
+        private notificationToastService: NotificationToastService,
         private fb: FormBuilder,
     ) {
-         this.loading$ = this.accionesService.loading$; // Observable boolean
+        this.loading$ = this.accionesService.loading$; // Observable boolean
     }
 
     ngOnInit() {
@@ -93,40 +82,26 @@ export class AccionesComponent implements OnInit {
     }
 
 
-    buildForm(accion: any = {}) {
+    buildForm(accion: Accion = {} as Accion) {
         this.form = this.fb.group({
-            nombre: [accion.nombre || '', Validators.required],
+            nombre: [accion.nombre || null, Validators.required],
         });
     }
 
 
     loadData() {
         this.accionesService.findAll().subscribe({
-            next: (res: StatusResponse<any>) => {
-                console.log(res);
+            next: (res: StatusResponse<Accion[]>) => {
                 if (res.ok && res.data) {
                     this.acciones.set(res.data);
                 } else {
-                    this.errorToast(this.utils.normalizeMessages(res.message));
-                        console.warn(this.utils.normalizeMessages(res.message));   }
+                    this.notificationToastService.error(this.utils.normalizeMessages(res.message));
+                }
             },
             error: (err) => {
-                  this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                    console.warn(this.utils.normalizeMessages(err?.error?.message)); }
+                this.notificationToastService.error(this.utils.normalizeMessages(err?.error?.message));
+            }
         });
-
-        // this.cols = [
-        //     { field: 'Nombre', header: 'Name' },
-        //     { field: 'image', header: 'Image' },
-        //     { field: 'price', header: 'Price' },
-        //     { field: 'category', header: 'Category' }
-        // ];
-
-        // this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
-    }
-
-    exportCSV() {
-        // this.dt.exportCSV();
     }
 
     onGlobalFilter(table: Table, event: Event) {
@@ -134,87 +109,25 @@ export class AccionesComponent implements OnInit {
     }
 
     openNew() {
-        this.accion = {};
+        this.accion = {} as Accion;
         this.submitted = false;
         this.buildForm(); // <- Aquí
         this.accionDialog = true;
     }
 
-    openEdit(accion: any) {
+    openEdit(accion: Accion) {
         this.accion = { ...accion };
         this.buildForm(this.accion); // <- Aquí
         this.accionDialog = true;
     }
 
 
-    deleteSelectedAcciones() {
-        this.confirmationService.confirm({
-            message: '¿Estas seguro de eliminar las acciones seleccionadas?',
-            header: 'Confirmar',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                const idsToDelete = this.selectedAcciones?.map(accion => accion.id) || [];
-                this.accionesService.deleteMany(idsToDelete).subscribe({
-                    next: (response: StatusResponse<any>) => {
-                        if (response.ok && response.data) {
-                            console.log(response);
-                            this.acciones.set(this.acciones().filter((val) => !this.selectedAcciones?.includes(val)));
-                            this.selectedAcciones = null;
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Acciones Deleted',
-                                life: 3000
-                            });
-                        } else {
-                            console.warn(this.utils.normalizeMessages(response.message));
-                        }
-                    },
-                    error: (err) => {
-                        console.warn(this.utils.normalizeMessages(err?.error?.message));
-                    }
-                });
-
-
-            }
-        });
-    }
 
     hideDialog() {
+        this.accion = {} as Accion;
+        this.form.reset();
         this.accionDialog = false;
         this.submitted = false;
-    }
-
-    deleteAccion(accion: any) {
-        this.confirmationService.confirm({
-            message: '¿Estas seguro de eliminar esta accion ' + accion.nombre + '?',
-            header: 'Confirmar',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                this.accionesService.delete(accion.id).subscribe({
-                    next: (res: StatusResponse<any>) => {
-                        if (res.ok && res.data) {
-                            this.acciones.set(this.acciones().filter((val) => val.id !== accion.id));
-                            this.accion = {};
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Acciones Deleted',
-                                life: 3000
-                            });
-                        } else {
-                            this.errorToast(this.utils.normalizeMessages(res.message));
-                            console.warn(this.utils.normalizeMessages(res.message));
-                        }
-                    },
-                    error: (err) => {
-                        this.errorToast(this.utils.normalizeMessages(err?.error?.message));
-                        console.warn(this.utils.normalizeMessages(err?.error?.message));
-                    }
-                });
-
-            }
-        });
     }
 
     saveUpdateAccion() {
@@ -223,64 +136,97 @@ export class AccionesComponent implements OnInit {
 
         const data = this.form.value;
 
+        //Si tengo algo en accion es que ando editando
         if (this.accion.id) {
-            const updated = { ...this.accion, ...data };
-
-            this.accionesService.update(updated.id, {nombre: updated.nombre}).subscribe({
-                next: (res) => {
-                    if (res.ok && res.data) {
+            this.accionesService.update(this.accion.id!, data).subscribe({
+                next: (response) => {
+                    if (response.ok && response.data) {
                         this.acciones.set(
-                            this.acciones().map(op => op.id === this.accion.id ? updated : op)
+                            this.acciones().map(op => op.id === response.data.id ? response.data : op)
                         );
-                        this.successToast('Opción actualizada correctamente');
+                        this.notificationToastService.success('Acción actualizada correctamente');
+                        this.hideDialog();
                     } else {
-                        this.errorToast(this.utils.normalizeMessages(res.message));
+                        this.notificationToastService.error(this.utils.normalizeMessages(response.message));
                     }
                 },
                 error: (err) => {
-                    this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                    this.notificationToastService.error(this.utils.normalizeMessages(err?.error?.message));
                 }
             });
 
         } else {
-            const newAccion = { ...data };
-
-            this.accionesService.create(newAccion).subscribe({
-                next: (res) => {
-                    if (res.ok && res.data) {
-                        this.acciones.set([...this.acciones(), res.data]);
-                        this.successToast('Opción creada correctamente');
+            this.accionesService.create(data).subscribe({
+                next: (response) => {
+                    if (response.ok && response.data) {
+                        this.acciones.set([...this.acciones(), response.data]);
+                        this.notificationToastService.success('Acción creada correctamente');
+                        this.hideDialog();
                     } else {
-                        this.errorToast(this.utils.normalizeMessages(res.message));
-                        console.warn(this.utils.normalizeMessages(res.message));
+                        this.notificationToastService.error(this.utils.normalizeMessages(response.message));
+                        console.warn(this.utils.normalizeMessages(response.message));
                     }
                 },
                 error: (err) => {
-                    this.errorToast(this.utils.normalizeMessages(err?.error?.message));
+                    this.notificationToastService.error(this.utils.normalizeMessages(err?.error?.message));
                     console.warn(this.utils.normalizeMessages(err?.error?.message));
                 }
             });
         }
-
-        this.accionDialog = false;
     }
 
-    private successToast(message: string) {
-        this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: message,
-            life: 3000
+    deleteSelectedAcciones() {
+        this.confirmationService.confirm({
+            message: '¿Estas seguro de eliminar las acciones seleccionadas?',
+            header: 'Confirmar',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                const idsToDelete = this.selectedAcciones?.map(accion => accion.id!) || [];
+
+                this.accionesService.deleteMany(idsToDelete).subscribe({
+                    next: (response: StatusResponse<any>) => {
+                        if (response.ok) {
+
+                            this.acciones.set(this.acciones().filter((val) => !idsToDelete.includes(val.id!)));
+                            this.notificationToastService.success('Acciones eliminadas correctamente');
+                            this.selectedAcciones = null;
+                            this.hideDialog();
+                        } else {
+                            this.notificationToastService.error(this.utils.normalizeMessages(response.message));
+                        }
+                    },
+                    error: (err) => {
+                        this.notificationToastService.error(this.utils.normalizeMessages(err?.error?.message));
+                    }
+                });
+
+
+            }
         });
     }
 
-    private errorToast(message: string | string[]) {
-        const detail = Array.isArray(message) ? message.join('\n') : message;
-        this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail,
-            life: 5000
+    deleteAccion(accion: Accion) {
+        this.confirmationService.confirm({
+            message: '¿Estas seguro de eliminar esta accion ' + accion.nombre + '?',
+            header: 'Confirmar',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                this.accionesService.delete(accion.id!).subscribe({
+                    next: (response: StatusResponse<any>) => {
+                        if (response.ok) {
+                            this.acciones.set(this.acciones().filter((val) => val.id !== accion.id));
+                            this.hideDialog();
+                            this.notificationToastService.success('Acción Eliminada');
+                        } else {
+                            this.notificationToastService.error(this.utils.normalizeMessages(response.message));
+                        }
+                    },
+                    error: (err) => {
+                        this.notificationToastService.error(this.utils.normalizeMessages(err?.error?.message));
+                    }
+                });
+
+            }
         });
     }
 

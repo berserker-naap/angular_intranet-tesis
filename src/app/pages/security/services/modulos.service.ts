@@ -18,7 +18,7 @@ export class ModulosService {
   private withLoading<T>(obs: Observable<T>): Observable<T> {
     this._loading.next(true);
     return obs.pipe(finalize(() =>
-      setTimeout(() => this._loading.next(false), 100)
+      setTimeout(() => this._loading.next(false), 50)
     ));
   }
 

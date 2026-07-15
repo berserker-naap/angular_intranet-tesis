@@ -7,8 +7,8 @@ import { StatusResponse } from '../../../shared/interface/status-response.interf
 @Injectable({
   providedIn: 'root'
 })
-export class PermissionsService {
-  private readonly apiUrl = `${environment.apiUrlSecurity}/permissions`;
+export class SubcategoriasService {
+  private readonly apiUrl = `${environment.apiUrlSecurity}/subcategoria`;
 
   private _loading = new BehaviorSubject<boolean>(false);
   public readonly loading$: Observable<boolean> = this._loading.asObservable();
@@ -18,7 +18,7 @@ export class PermissionsService {
   private withLoading<T>(obs: Observable<T>): Observable<T> {
     this._loading.next(true);
     return obs.pipe(finalize(() =>
-      setTimeout(() => this._loading.next(false), 100)
+      setTimeout(() => this._loading.next(false), 50)
     ));
   }
 

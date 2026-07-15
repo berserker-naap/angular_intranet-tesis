@@ -4,7 +4,7 @@ import { Observable, of } from "rxjs";
 import { AuthService } from "../../pages/auth/services/auth.service";
 
 @Injectable({ providedIn: 'root' })
-export class AuthGuard implements CanActivate,CanActivateChild  {
+export class AuthGuard implements CanActivate, CanActivateChild {
   constructor(private authService: AuthService, private router: Router) {}
 
   canActivate(): Observable<boolean> {
@@ -16,10 +16,19 @@ export class AuthGuard implements CanActivate,CanActivateChild  {
   }
 
   private validate(): Observable<boolean> {
-    if (!this.authService.getToken() || this.authService.isTokenExpired()) {
-      this.router.navigate(['/auth/login']); // ✅ asegúrate de apuntar bien a tu ruta de login
+    const token = this.authService.getToken();
+
+    if (!token) {
+      this.router.navigate(['/auth/login']);
       return of(false);
     }
+
+    if (this.authService.isTokenExpired()) {
+      this.authService.logout();
+      this.router.navigate(['/auth/login']);
+      return of(false);
+    }
+
     return of(true);
   }
 }

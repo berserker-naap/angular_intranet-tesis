@@ -1,10 +1,13 @@
 import { HTTP_INTERCEPTORS, provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
-import { ApplicationConfig } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter, withEnabledBlockingInitialNavigation, withInMemoryScrolling } from '@angular/router';
 import Aura from '@primeng/themes/aura';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
+import { firstValueFrom } from 'rxjs';
 import { appRoutes } from './app.routes';
+import { AuthService } from './app/pages/auth/services/auth.service';
 import { AuthInterceptor } from './app/shared/interceptor/auth-iterceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -26,6 +29,13 @@ export const appConfig: ApplicationConfig = {
       useClass: AuthInterceptor,
       multi: true
     },
+    {
+      provide: APP_INITIALIZER,
+      multi: true,
+      deps: [AuthService],
+      useFactory: (authService: AuthService) => () =>
+        firstValueFrom(authService.validateSessionOnAppStart())
+    },
 
     // Animations & PrimeNG
     provideAnimationsAsync(),
@@ -34,6 +44,10 @@ export const appConfig: ApplicationConfig = {
         preset: Aura,
         options: { darkModeSelector: '.app-dark' }
       }
-    })
+    }),
+
+    // PrimeNG Services
+    MessageService,
+    ConfirmationService
   ]
 };
