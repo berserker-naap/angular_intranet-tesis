@@ -1,0 +1,115 @@
+:host {
+    display: block;
+}
+
+.toolbar-title h2,
+.section-title h3 {
+    margin: 0 0 0.25rem;
+}
+
+.toolbar-title p,
+.section-title p {
+    margin: 0;
+    color: var(--text-color-secondary);
+}
+
+.toolbar-actions,
+.filters,
+.filters-actions {
+    display: flex;
+    align-items: end;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.filters {
+    margin-bottom: 0.75rem;
+}
+
+.filters label {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 11rem;
+}
+
+.filters span,
+.filter-summary {
+    color: var(--text-color-secondary);
+    font-size: 0.9rem;
+}
+
+.filter-summary {
+    margin: 0 0 1rem;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.summary-card {
+    display: grid;
+    gap: 0.35rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--surface-border);
+    border-radius: 1rem;
+    background: var(--surface-50);
+}
+
+.summary-label {
+    color: var(--text-color-secondary);
+    font-size: 0.92rem;
+}
+
+.summary-card strong {
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.summary-card small {
+    color: var(--text-color-secondary);
+}
+
+.section-title {
+    margin-bottom: 1rem;
+}
+
+.multiline {
+    white-space: normal;
+    line-height: 1.35;
+}
+
+.mono {
+    font-family: 'Consolas', 'Courier New', monospace;
+}
+
+.detail-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.detail-row {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.detail-row pre {
+    max-height: 18rem;
+    overflow: auto;
+    margin: 0;
+    padding: 0.85rem;
+    border: 1px solid var(--surface-border);
+    border-radius: 0.75rem;
+    background: var(--surface-50);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+@media (max-width: 768px) {
+    .toolbar-actions,
+    .filters-actions,
+    .filters label {
+        width: 100%;
+    }
+}

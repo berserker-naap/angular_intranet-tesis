@@ -6,12 +6,12 @@
     <p-toolbar styleClass="mb-4">
         <ng-template #start>
             <div class="toolbar-title">
-                <h2>Campañas de notificación</h2>
-                <p>Envía campañas masivas por push y publícalas en la bandeja interna de la app.</p>
+                <h2>Campanas de notificacion</h2>
+                <p>Envia campanas masivas por push y publicalas en la bandeja interna de la app.</p>
             </div>
         </ng-template>
         <ng-template #end>
-            <p-button label="Nueva campaña" icon="pi pi-plus" (click)="openNew()"></p-button>
+            <p-button label="Nueva campana" icon="pi pi-plus" appHasAction="Crear" appHasActionPath="/security/campanas" (click)="openNew()"></p-button>
         </ng-template>
     </p-toolbar>
 
@@ -21,7 +21,7 @@
             pInputText
             type="text"
             (input)="onGlobalFilter(dt, $event)"
-            placeholder="Buscar campaña por título o mensaje"
+            placeholder="Buscar campana por titulo o mensaje"
             class="w-full"
         />
     </p-iconfield>
@@ -34,13 +34,13 @@
         [rowHover]="true"
         [tableStyle]="{ 'min-width': '75rem' }"
         dataKey="id"
-        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} campañas"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} campanas"
         [showCurrentPageReport]="true"
         [globalFilterFields]="['title', 'message', 'deepLink', 'status']"
     >
         <ng-template #header>
             <tr>
-                <th>Título</th>
+                <th>Titulo</th>
                 <th>Mensaje</th>
                 <th>Canal</th>
                 <th>Deep link</th>
@@ -75,6 +75,8 @@
                             [text]="true"
                             [rounded]="true"
                             severity="secondary"
+                            appHasAction="Editar"
+                            appHasActionPath="/security/campanas"
                             (click)="openEdit(campaign)"
                             [disabled]="campaign.status === 'SENT'"
                         ></p-button>
@@ -83,6 +85,8 @@
                             [text]="true"
                             [rounded]="true"
                             severity="contrast"
+                            appHasAction="Editar"
+                            appHasActionPath="/security/campanas"
                             (click)="sendCampaign(campaign)"
                             [disabled]="campaign.status === 'SENT'"
                         ></p-button>
@@ -99,14 +103,14 @@
     [modal]="true"
     [draggable]="false"
     [resizable]="false"
-    [header]="selectedCampaign ? 'Editar campaña' : 'Nueva campaña'"
+    [header]="selectedCampaign ? 'Editar campana' : 'Nueva campana'"
     (onHide)="hideDialog()"
 >
     <form [formGroup]="form" class="campaign-form">
         <div class="field">
-            <label for="title">Título</label>
+            <label for="title">Titulo</label>
             <input id="title" pInputText formControlName="title" maxlength="120" />
-            <small class="error" *ngIf="submitted && form.get('title')?.invalid">Ingresa un título válido.</small>
+            <small class="error" *ngIf="submitted && form.get('title')?.invalid">Ingresa un titulo valido.</small>
         </div>
 
         <div class="field">
@@ -118,7 +122,7 @@
                 formControlName="message"
                 maxlength="500"
             ></textarea>
-            <small class="error" *ngIf="submitted && form.get('message')?.invalid">Ingresa un mensaje válido.</small>
+            <small class="error" *ngIf="submitted && form.get('message')?.invalid">Ingresa un mensaje valido.</small>
         </div>
 
         <div class="field">
@@ -131,7 +135,7 @@
             <div class="switch-card">
                 <div>
                     <strong>Enviar push</strong>
-                    <p>Dispara la notificación al dispositivo mediante Azure Notification Hubs.</p>
+                    <p>Dispara la notificacion al dispositivo mediante Azure Notification Hubs.</p>
                 </div>
                 <p-inputSwitch formControlName="sendPush"></p-inputSwitch>
             </div>
@@ -139,7 +143,7 @@
             <div class="switch-card">
                 <div>
                     <strong>Publicar en bandeja</strong>
-                    <p>Muestra la campaña en la campana de notificaciones dentro de la app.</p>
+                    <p>Muestra la campana en la campana de notificaciones dentro de la app.</p>
                 </div>
                 <p-inputSwitch formControlName="publishInApp"></p-inputSwitch>
             </div>
@@ -147,7 +151,7 @@
 
         <div class="dialog-actions">
             <p-button label="Cancelar" severity="secondary" [text]="true" (click)="hideDialog()"></p-button>
-            <p-button label="Guardar" icon="pi pi-check" (click)="saveCampaign()"></p-button>
+            <p-button label="Guardar" icon="pi pi-check" [appHasAction]="selectedCampaign ? 'Editar' : 'Crear'" appHasActionPath="/security/campanas" (click)="saveCampaign()"></p-button>
         </div>
     </form>
 </p-dialog>

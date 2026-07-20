@@ -27,6 +27,7 @@ import { LoadingOverlayComponent } from '../../../../shared/components/loading-o
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
 import { Rol } from './interfaces/rol.interface';
+import { HasActionDirective } from '../../../../shared/directives/has-action.directive';
 
 
 
@@ -54,7 +55,8 @@ import { Rol } from './interfaces/rol.interface';
         ConfirmDialogModule,
         ReactiveFormsModule,
         InputSwitchModule,
-        LoadingOverlayComponent
+        LoadingOverlayComponent,
+        HasActionDirective
     ],
     templateUrl: './roles.component.html',
     styleUrls: ['./roles.component.scss'],

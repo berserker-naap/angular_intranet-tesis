@@ -23,6 +23,8 @@
           <div
             *ngFor="let accion of opcion.acciones"
             class="flex items-center gap-2"
+            appHasAction="Editar"
+            appHasActionPath="/security/permisos"
           >
             <p-checkbox
               [inputId]="'chk_' + opcion.id + '_' + accion.id"

@@ -29,6 +29,7 @@ import { Observable } from 'rxjs';
 import { Opcion } from './interface/opcion.interface';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
+import { HasActionDirective } from '../../../../shared/directives/has-action.directive';
 
 @Component({
     selector: 'app-opciones',
@@ -55,7 +56,8 @@ import * as FileSaver from 'file-saver';
         ReactiveFormsModule,
         InputSwitchModule,
         DropdownModule,
-        LoadingOverlayComponent
+        LoadingOverlayComponent,
+        HasActionDirective
     ],
     templateUrl: './opciones.component.html',
     styleUrls: ['./opciones.component.scss'],

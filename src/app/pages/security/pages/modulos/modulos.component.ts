@@ -26,6 +26,7 @@ import { LoadingOverlayComponent } from '../../../../shared/components/loading-o
 import { Observable } from 'rxjs';
 import { Modulo } from './interfaces/modulo.interface';
 import { NotificationToastService } from '../../../../shared/services/notification-toast.service';
+import { HasActionDirective } from '../../../../shared/directives/has-action.directive';
 
 
 @Component({
@@ -52,7 +53,8 @@ import { NotificationToastService } from '../../../../shared/services/notificati
         ConfirmDialogModule,
         ReactiveFormsModule,
         InputSwitchModule,
-        LoadingOverlayComponent
+        LoadingOverlayComponent,
+        HasActionDirective
     ],
     templateUrl: './modulos.component.html',
     styleUrls: ['./modulos.component.scss'],

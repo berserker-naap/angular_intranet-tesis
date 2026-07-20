@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run unit tests
+        run: npm run test:ci
+
       - name: Configure production API endpoints
         if: github.ref_name == 'main'
         shell: bash
@@ -36,6 +39,8 @@ jobs:
             apiUrlAuth: 'https://api-tesisunt.azurewebsites.net/api/auth',
             apiUrlSecurity: 'https://api-tesisunt.azurewebsites.net/api/security',
             apiUrlBusinessparam: 'https://api-tesisunt.azurewebsites.net/api/businessparam',
+            apiUrlAnalytics: 'https://api-tesisunt.azurewebsites.net/api/analytics',
+            apiUrlFinance: 'https://api-tesisunt.azurewebsites.net/api/finance',
             apiUrlMessaging: 'https://api-tesisunt.azurewebsites.net/api/integrations/messaging',
             checkStatusEndpoint: '/auth/check-status',
             loginEndpoint: '/auth/login'

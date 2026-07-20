@@ -28,6 +28,7 @@ import { MultitablaService } from '../../services/multitabla.service';
 import { Multitabla, MultitablaItem } from './interfaces/multitabla.interface';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
+import { HasActionDirective } from '../../../../shared/directives/has-action.directive';
 
 @Component({
     selector: 'app-multitabla',
@@ -53,7 +54,8 @@ import * as FileSaver from 'file-saver';
         ConfirmDialogModule,
         ReactiveFormsModule,
         InputSwitchModule,
-        LoadingOverlayComponent
+        LoadingOverlayComponent,
+        HasActionDirective
     ],
     templateUrl: './multitabla.component.html',
     styleUrls: ['./multitabla.component.scss']

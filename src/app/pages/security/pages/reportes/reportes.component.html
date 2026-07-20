@@ -1,0 +1,237 @@
+<p-toast></p-toast>
+<app-loading-overlay [loading]="(loading$ | async) ?? false"></app-loading-overlay>
+
+<div class="card">
+    <p-toolbar styleClass="mb-4">
+        <ng-template #start>
+            <div class="toolbar-title">
+                <h2>Reportes operativos</h2>
+                <p>Errores de servicio, WhatsApp, correos y push con filtros y trazabilidad.</p>
+            </div>
+        </ng-template>
+        <ng-template #end>
+            <div class="toolbar-actions">
+                <p-button label="Exportar CSV" icon="pi pi-download" severity="secondary" (click)="exportCsv()"></p-button>
+                <p-button label="Actualizar" icon="pi pi-refresh" (click)="loadData()"></p-button>
+            </div>
+        </ng-template>
+    </p-toolbar>
+
+    <div class="filters">
+        <label>
+            <span>Desde</span>
+            <input pInputText type="date" [(ngModel)]="dateFrom" />
+        </label>
+        <label>
+            <span>Hasta</span>
+            <input pInputText type="date" [(ngModel)]="dateTo" />
+        </label>
+        <div class="filters-actions">
+            <p-button label="Filtrar" icon="pi pi-filter" (click)="applyFilters()"></p-button>
+            <p-button label="Limpiar" icon="pi pi-eraser" severity="secondary" [outlined]="true" (click)="resetFilters()"></p-button>
+        </div>
+    </div>
+
+    <p class="filter-summary">{{ filterSummary }}</p>
+
+    <div class="summary-grid">
+        <article class="summary-card">
+            <span class="summary-label">Errores de servicio</span>
+            <strong>{{ serviceErrors().length }}</strong>
+            <small>Registros filtrados</small>
+        </article>
+        <article class="summary-card">
+            <span class="summary-label">WhatsApp</span>
+            <strong>{{ whatsappLogs().length }}</strong>
+            <small>Entradas y salidas</small>
+        </article>
+        <article class="summary-card">
+            <span class="summary-label">Correos</span>
+            <strong>{{ emailLogs().length }}</strong>
+            <small>Envios por proveedor</small>
+        </article>
+        <article class="summary-card">
+            <span class="summary-label">Push</span>
+            <strong>{{ pushLogs().length }}</strong>
+            <small>Despachos registrados</small>
+        </article>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-title">
+        <h3>Errores de servicio</h3>
+        <p>Bitacora de fallos instrumentados en backend.</p>
+    </div>
+    <p-table [value]="serviceErrors()" [paginator]="true" [rows]="6" [tableStyle]="{ 'min-width': '82rem' }" dataKey="id">
+        <ng-template #header>
+            <tr>
+                <th>Fecha</th>
+                <th>Fuente</th>
+                <th>Servicio</th>
+                <th>Ruta</th>
+                <th>Mensaje</th>
+                <th>Usuario</th>
+                <th>Detalle</th>
+            </tr>
+        </ng-template>
+        <ng-template #body let-item>
+            <tr>
+                <td>{{ formatDate(item.fechaRegistro) }}</td>
+                <td><p-tag [value]="item.sourceType" [severity]="getErrorSeverity(item)"></p-tag></td>
+                <td>
+                    <div class="font-semibold">{{ item.serviceName || 'Sin servicio' }}</div>
+                    <small>{{ item.moduleName || 'Sin modulo' }} / {{ item.methodName || 'Sin metodo' }}</small>
+                </td>
+                <td>
+                    <div>{{ item.httpMethod || 'N/A' }}</div>
+                    <small class="mono">{{ item.route || 'Sin ruta' }}</small>
+                </td>
+                <td>
+                    <div class="multiline">{{ item.message }}</div>
+                    <small *ngIf="item.detail">{{ item.detail }}</small>
+                </td>
+                <td>{{ item.usuarioLogin || 'system' }}</td>
+                <td>
+                    <p-button icon="pi pi-search" [text]="true" [rounded]="true" [disabled]="!hasDetail(item)" (click)="openDetail('Error de servicio', item)"></p-button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+            <tr><td colspan="7">No hay errores de servicio para el filtro seleccionado.</td></tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<div class="card">
+    <div class="section-title">
+        <h3>Bitacora WhatsApp</h3>
+        <p>Mensajes de entrada y salida registrados.</p>
+    </div>
+    <p-table [value]="whatsappLogs()" [paginator]="true" [rows]="6" [tableStyle]="{ 'min-width': '82rem' }" dataKey="id">
+        <ng-template #header>
+            <tr>
+                <th>Fecha</th>
+                <th>Direccion</th>
+                <th>Estado</th>
+                <th>Telefono</th>
+                <th>Usuario</th>
+                <th>Texto</th>
+                <th>Detalle</th>
+            </tr>
+        </ng-template>
+        <ng-template #body let-item>
+            <tr>
+                <td>{{ formatDate(item.fechaRegistro) }}</td>
+                <td><p-tag [value]="item.direction" [severity]="getStatusSeverity(item.direction)"></p-tag></td>
+                <td><p-tag [value]="item.status" [severity]="getStatusSeverity(item.status)"></p-tag></td>
+                <td class="mono">{{ item.phone }}</td>
+                <td>{{ item.usuarioLogin || 'Sin usuario' }}</td>
+                <td>
+                    <div class="multiline">{{ item.text || 'Sin texto' }}</div>
+                    <small *ngIf="item.detail">{{ item.detail }}</small>
+                </td>
+                <td>
+                    <p-button icon="pi pi-search" [text]="true" [rounded]="true" [disabled]="!hasDetail(item)" (click)="openDetail('WhatsApp', item)"></p-button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+            <tr><td colspan="7">No hay mensajes de WhatsApp para el filtro seleccionado.</td></tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<div class="card">
+    <div class="section-title">
+        <h3>Bitacora de correos</h3>
+        <p>Envios registrados por el proveedor de email.</p>
+    </div>
+    <p-table [value]="emailLogs()" [paginator]="true" [rows]="6" [tableStyle]="{ 'min-width': '82rem' }" dataKey="id">
+        <ng-template #header>
+            <tr>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Proveedor</th>
+                <th>Destino</th>
+                <th>Asunto</th>
+                <th>Usuario</th>
+                <th>Detalle</th>
+            </tr>
+        </ng-template>
+        <ng-template #body let-item>
+            <tr>
+                <td>{{ formatDate(item.fechaRegistro) }}</td>
+                <td><p-tag [value]="item.status" [severity]="getStatusSeverity(item.status)"></p-tag></td>
+                <td>{{ item.provider }}</td>
+                <td class="multiline">{{ item.recipientsSummary }}</td>
+                <td>
+                    <div class="multiline">{{ item.subject }}</div>
+                    <small *ngIf="item.templateCode">Plantilla: {{ item.templateCode }}</small>
+                </td>
+                <td>{{ item.usuarioLogin || 'system' }}</td>
+                <td>
+                    <p-button icon="pi pi-search" [text]="true" [rounded]="true" [disabled]="!hasDetail(item)" (click)="openDetail('Correo', item)"></p-button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+            <tr><td colspan="7">No hay correos para el filtro seleccionado.</td></tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<div class="card">
+    <div class="section-title">
+        <h3>Bitacora push</h3>
+        <p>Despachos y resultados de notificaciones push.</p>
+    </div>
+    <p-table [value]="pushLogs()" [paginator]="true" [rows]="6" [tableStyle]="{ 'min-width': '82rem' }" dataKey="id">
+        <ng-template #header>
+            <tr>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Plataforma</th>
+                <th>Titulo</th>
+                <th>Destino</th>
+                <th>Usuario</th>
+                <th>Detalle</th>
+            </tr>
+        </ng-template>
+        <ng-template #body let-item>
+            <tr>
+                <td>{{ formatDate(item.fechaRegistro) }}</td>
+                <td><p-tag [value]="item.status" [severity]="getStatusSeverity(item.status)"></p-tag></td>
+                <td>{{ item.platform }} / {{ item.provider }}</td>
+                <td>
+                    <div class="multiline">{{ item.title || 'Sin titulo' }}</div>
+                    <small *ngIf="item.messagePreview">{{ item.messagePreview }}</small>
+                </td>
+                <td class="multiline">{{ item.targetExpression }}</td>
+                <td>{{ item.usuarioLogin || 'system' }}</td>
+                <td>
+                    <p-button icon="pi pi-search" [text]="true" [rounded]="true" [disabled]="!hasDetail(item)" (click)="openDetail('Push', item)"></p-button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+            <tr><td colspan="7">No hay notificaciones push para el filtro seleccionado.</td></tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<p-dialog
+    [(visible)]="detailDialog"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '58rem', maxWidth: '95vw' }"
+    [header]="detail()?.title || 'Detalle'"
+>
+    <div class="detail-grid" *ngIf="detail() as currentDetail">
+        <article *ngFor="let row of currentDetail.rows" class="detail-row">
+            <strong>{{ row.label }}</strong>
+            <pre [class.mono]="row.mono">{{ row.value }}</pre>
+        </article>
+    </div>
+</p-dialog>

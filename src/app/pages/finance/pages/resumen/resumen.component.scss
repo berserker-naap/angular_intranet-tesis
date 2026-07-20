@@ -1,0 +1,145 @@
+:host {
+    display: block;
+}
+
+.toolbar-title h2,
+.section-title h3,
+.alert-card h3 {
+    margin: 0 0 0.25rem;
+}
+
+.toolbar-title p,
+.section-title p,
+.alert-card p {
+    margin: 0;
+    color: var(--text-color-secondary);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    border: 1px solid var(--surface-border);
+    border-left: 4px solid transparent;
+    border-radius: 1rem;
+    padding: 1rem;
+    background: linear-gradient(180deg, var(--surface-card) 0%, color-mix(in srgb, var(--surface-card) 92%, var(--surface-ground)) 100%);
+    display: grid;
+    gap: 0.35rem;
+}
+
+.accent-indigo {
+    border-left-color: #4f46e5;
+}
+
+.accent-green {
+    border-left-color: #15803d;
+}
+
+.accent-blue {
+    border-left-color: #2563eb;
+}
+
+.accent-amber {
+    border-left-color: #d97706;
+}
+
+.accent-rose {
+    border-left-color: #e11d48;
+}
+
+.accent-slate {
+    border-left-color: #475569;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-color-secondary);
+}
+
+.stat-value {
+    font-size: 1.6rem;
+    line-height: 1.1;
+}
+
+.stat-card small {
+    color: var(--text-color-secondary);
+}
+
+.filters-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    align-items: end;
+}
+
+.filter-box,
+.filter-actions {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.filter-box label {
+    font-weight: 600;
+}
+
+.filter-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.alert-grid,
+.finance-grid {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.alert-card {
+    border-top: 4px solid var(--surface-border);
+}
+
+.alert-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.alert-code {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-color-secondary);
+}
+
+.section-title {
+    margin-bottom: 1rem;
+}
+
+.account-cell,
+.transaction-cell {
+    display: grid;
+}
+
+.account-cell small,
+.transaction-cell small {
+    color: var(--text-color-secondary);
+}
+
+.balance-negative {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+@media (min-width: 1200px) {
+    .finance-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+    }
+}

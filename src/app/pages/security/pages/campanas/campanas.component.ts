@@ -19,6 +19,7 @@ import { LoadingOverlayComponent } from '../../../../shared/components/loading-o
 import { StatusResponse } from '../../../../shared/interface/status-response.interface';
 import { NotificationToastService } from '../../../../shared/services/notification-toast.service';
 import { UtilsService } from '../../../../shared/services/utils.service';
+import { HasActionDirective } from '../../../../shared/directives/has-action.directive';
 import { CampaignaItem, CampaignaPayload, CampaignasService } from '../../services/campaignas.service';
 
 @Component({
@@ -40,7 +41,8 @@ import { CampaignaItem, CampaignaPayload, CampaignasService } from '../../servic
         TagModule,
         IconFieldModule,
         InputIconModule,
-        LoadingOverlayComponent
+        LoadingOverlayComponent,
+        HasActionDirective
     ],
     templateUrl: './campanas.component.html',
     styleUrls: ['./campanas.component.scss'],

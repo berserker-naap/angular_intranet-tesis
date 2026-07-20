@@ -33,6 +33,7 @@ import { UtilsService } from "../../../../shared/services/utils.service";
 import { StatusResponse } from "../../../../shared/interface/status-response.interface";
 import { MultitablaService } from "../../services/multitabla.service";
 import { NotificationToastService } from "../../../../shared/services/notification-toast.service";
+import { HasActionDirective } from "../../../../shared/directives/has-action.directive";
 
 import { Observable } from "rxjs";
 import { Usuario } from "./interfaces/usuario.interface";
@@ -64,6 +65,7 @@ import { Usuario } from "./interfaces/usuario.interface";
         PickListModule,
         DatePickerModule,
         LoadingOverlayComponent,
+        HasActionDirective,
     ],
     templateUrl: "./usuarios.component.html",
     styleUrls: ["./usuarios.component.scss"],

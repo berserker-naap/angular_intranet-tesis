@@ -4,6 +4,8 @@ export const environment = {
   apiUrlAuth: 'https://api.tu-dominio.com/api/auth',
   apiUrlSecurity: 'https://api.tu-dominio.com/api/security',
   apiUrlBusinessparam: 'https://api.tu-dominio.com/api/businessparam',
+  apiUrlAnalytics: 'https://api.tu-dominio.com/api/analytics',
+  apiUrlFinance: 'https://api.tu-dominio.com/api/finance',
   apiUrlMessaging: 'https://api.tu-dominio.com/api/integrations/messaging',
   checkStatusEndpoint: '/auth/check-status',
   loginEndpoint: '/auth/login'

@@ -1,7 +1,7 @@
 <div class="card">
     <div class="flex justify-between items-center mb-3">
         <h2>Usuarios</h2>
-        <p-button label="Nuevo Usuario" icon="pi pi-plus" (click)="openNew()" />
+        <p-button label="Nuevo Usuario" icon="pi pi-plus" appHasAction="Crear" appHasActionPath="/security/usuarios" (click)="openNew()" />
     </div>
 
     <p-table #dt [value]="usuarios()" [paginator]="true" [rows]="10" [tableStyle]="{ 'min-width': '60rem' }"
@@ -10,7 +10,7 @@
         [(selection)]="selectedUsuarios" dataKey="id">
         <ng-template #header>
             <tr>
-                <th style="width: 3rem">
+                <th style="width: 3rem" appHasAction="Eliminar" appHasActionPath="/security/usuarios">
                     <p-tableHeaderCheckbox />
                 </th>
                 <th pSortableColumn="nombre">Login <p-sortIcon field="login" /></th>
@@ -22,7 +22,7 @@
 
         <ng-template #body let-usuario>
             <tr>
-                <td><p-tableCheckbox [value]="usuario" /></td>
+                <td appHasAction="Eliminar" appHasActionPath="/security/usuarios"><p-tableCheckbox [value]="usuario" /></td>
                 <td>{{ usuario.login }}</td>
                 <td>{{ usuario.persona?.nombre }} {{ usuario.persona?.apellido }}</td>
                 <td>
@@ -37,6 +37,8 @@
                         class="mr-2"
                         title="Asignar roles"
                         ariaLabel="Asignar roles"
+                        appHasAction="Editar"
+                        appHasActionPath="/security/usuarios"
                         (click)="abrirAsignarRoles(usuario)" />
                     <p-button
                         icon="pi pi-key"
@@ -46,10 +48,12 @@
                         class="mr-2"
                         title="Resetear contraseÃ±a"
                         ariaLabel="Resetear contraseÃ±a"
+                        appHasAction="Editar"
+                        appHasActionPath="/security/usuarios"
                         (click)="resetPassword(usuario)" />
-                    <p-button icon="pi pi-pencil" severity="info" rounded outlined class="mr-2"
+                    <p-button icon="pi pi-pencil" severity="info" rounded outlined class="mr-2" appHasAction="Editar" appHasActionPath="/security/usuarios"
                         (click)="openEdit(usuario)" />
-                    <p-button icon="pi pi-trash" severity="danger" rounded outlined (click)="deleteUsuario(usuario)" />
+                    <p-button icon="pi pi-trash" severity="danger" rounded outlined appHasAction="Eliminar" appHasActionPath="/security/usuarios" (click)="deleteUsuario(usuario)" />
                 </td>
             </tr>
         </ng-template>
@@ -180,7 +184,12 @@
     </ng-template>
     <ng-template #footer>
         <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
-        <p-button label="Guardar" icon="pi pi-check" (click)="saveUpdateUsuario()" />
+        <p-button
+            label="Guardar"
+            icon="pi pi-check"
+            [appHasAction]="isEditMode ? 'Editar' : 'Crear'"
+            appHasActionPath="/security/usuarios"
+            (click)="saveUpdateUsuario()" />
     </ng-template>
 
 </p-dialog>
@@ -227,7 +236,12 @@
     text
     (click)="cerrarRolesDialog()">
   </p-button>
-    <p-button label="Guardar Roles" icon="pi pi-check" (click)="guardarRoles()"></p-button>
+    <p-button
+      label="Guardar Roles"
+      icon="pi pi-check"
+      appHasAction="Editar"
+      appHasActionPath="/security/usuarios"
+      (click)="guardarRoles()"></p-button>
   </ng-template>
 </p-dialog>
 

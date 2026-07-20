@@ -3,7 +3,7 @@
         <div class="flex items-center justify-between">
             <h1 class="font-semibold text-xl mb-0">Roles</h1>
             <div>
-                <p-button label="Nuevo" icon="pi pi-plus" severity="success" class="mr-2" (click)="openNew()" />
+                <p-button label="Nuevo" icon="pi pi-plus" severity="success" class="mr-2" appHasAction="Crear" appHasActionPath="/security/roles" (click)="openNew()" />
                 <p-button label="Exportar" icon="pi pi-upload" severity="secondary" (click)="exportExcel()" />
             </div>
         </div>
@@ -18,7 +18,7 @@
                 <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Buscar..." />
             </p-iconfield>
 
-            <p-button severity="danger" label="Eliminar" icon="pi pi-trash" outlined (click)="deleteSelectedRoles()"
+            <p-button severity="danger" label="Eliminar" icon="pi pi-trash" outlined appHasAction="Eliminar" appHasActionPath="/security/roles" (click)="deleteSelectedRoles()"
                 [disabled]="!selectedRoles?.length" />
         </div>
 
@@ -29,7 +29,7 @@
 
             <ng-template #header>
                 <tr>
-                    <th style="width: 3rem">
+                    <th style="width: 3rem" appHasAction="Eliminar" appHasActionPath="/security/roles">
                         <p-tableHeaderCheckbox />
                     </th>
                     <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
@@ -40,13 +40,13 @@
 
             <ng-template #body let-rol>
                 <tr>
-                    <td><p-tableCheckbox [value]="rol" /></td>
+                    <td appHasAction="Eliminar" appHasActionPath="/security/roles"><p-tableCheckbox [value]="rol" /></td>
                     <td>{{ rol.nombre }}</td>
                     <td>{{ rol.descripcion }}</td>
                     <td>
-                        <p-button icon="pi pi-pencil" severity="info" rounded outlined class="mr-2"
+                        <p-button icon="pi pi-pencil" severity="info" rounded outlined class="mr-2" appHasAction="Editar" appHasActionPath="/security/roles"
                             (click)="openEdit(rol)" />
-                        <p-button icon="pi pi-trash" severity="danger" rounded outlined
+                        <p-button icon="pi pi-trash" severity="danger" rounded outlined appHasAction="Eliminar" appHasActionPath="/security/roles"
                             (click)="deleteRol(rol)" />
                     </td>
                 </tr>
@@ -83,7 +83,7 @@
 
     <ng-template #footer>
         <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
-        <p-button label="Guardar" icon="pi pi-check" (click)="saveUpdateRol()" />
+        <p-button label="Guardar" icon="pi pi-check" [appHasAction]="rol?.id ? 'Editar' : 'Crear'" appHasActionPath="/security/roles" (click)="saveUpdateRol()" />
     </ng-template>
 </p-dialog>
 <p-toast position="top-right"></p-toast>

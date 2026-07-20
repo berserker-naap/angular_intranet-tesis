@@ -1,0 +1,256 @@
+<p-toast></p-toast>
+<app-loading-overlay [loading]="loading()"></app-loading-overlay>
+
+<div class="card">
+    <p-toolbar styleClass="mb-4">
+        <ng-template #start>
+            <div class="toolbar-title">
+                <h2>Dashboard operativo</h2>
+                <p>Vista real de finanzas, analitica y salud operativa al {{ formatDateTime(generatedAt()) }}.</p>
+            </div>
+        </ng-template>
+        <ng-template #end>
+            <div class="toolbar-actions">
+                <a *ngIf="canViewFinance" pButton routerLink="/finance/resumen" label="Finanzas" icon="pi pi-wallet"></a>
+                <a *ngIf="canViewReports" pButton routerLink="/security/reportes" severity="secondary" label="Reportes" icon="pi pi-chart-bar"></a>
+                <p-button label="Actualizar" icon="pi pi-refresh" (click)="loadDashboard()"></p-button>
+            </div>
+        </ng-template>
+    </p-toolbar>
+
+    <div class="stats-grid" *ngIf="financeSummary() as finance">
+        <article class="stat-card accent-blue">
+            <span class="stat-label">Cuentas activas</span>
+            <strong class="stat-value">{{ finance.totalAccounts }}</strong>
+            <small>Resumen obtenido desde `finance/balance-account/summary`.</small>
+        </article>
+        <article class="stat-card accent-green">
+            <span class="stat-label">Disponible PEN</span>
+            <strong class="stat-value">{{ formatMoney(finance.totalDisponiblePen, 'S/') }}</strong>
+            <small>Saldo liquido actual para operacion.</small>
+        </article>
+        <article class="stat-card accent-amber" *ngIf="analyticsInsights() as analytics">
+            <span class="stat-label">Prediccion proximo mes</span>
+            <strong class="stat-value">{{ formatMoney(analytics.resumenAccionable.totalPredicho, analytics.monedaSimbolo) }}</strong>
+            <small>{{ analytics.prediccion.items.length }} categorias analizadas.</small>
+        </article>
+        <article class="stat-card accent-rose" *ngIf="analyticsInsights() as analytics">
+            <span class="stat-label">Anomalias detectadas</span>
+            <strong class="stat-value">{{ analytics.anomalias.total }}</strong>
+            <small>Fuente: {{ analytics.anomalias.fuente === 'ML_SERVICE' ? 'ML' : 'Fallback' }}.</small>
+        </article>
+        <article class="stat-card accent-slate" *ngIf="operationalSummary() as operational">
+            <span class="stat-label">Errores recientes</span>
+            <strong class="stat-value">{{ operational.serviceErrors.length }}</strong>
+            <small>Ultimos {{ reportLimit }} eventos operativos cargados.</small>
+        </article>
+        <article class="stat-card accent-indigo" *ngIf="analyticsInsights() as analytics">
+            <span class="stat-label">Perfil detectado</span>
+            <strong class="stat-value">{{ analytics.segmentacion.perfil.nombre }}</strong>
+            <small>Confianza {{ formatPercent(analytics.segmentacion.perfil.confianza) }}.</small>
+        </article>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="card" *ngIf="analyticsInsights() as analytics">
+        <div class="section-title">
+            <h3>Resumen accionable</h3>
+            <p>Rango analizado: {{ formatDate(analytics.periodoInicio) }} al {{ formatDate(analytics.periodoFin) }}.</p>
+        </div>
+
+        <div class="detail-list">
+            <div class="detail-item">
+                <span class="detail-label">Transacciones evaluadas</span>
+                <strong>{{ analytics.cantidadTransacciones }}</strong>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Mayor crecimiento</span>
+                <strong>{{ analytics.resumenAccionable.categoriaMayorCrecimiento?.nombre ?? 'Sin hallazgos' }}</strong>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Oportunidad de ahorro</span>
+                <strong>
+                    {{
+                        analytics.resumenAccionable.oportunidadAhorro
+                            ? formatMoney(analytics.resumenAccionable.oportunidadAhorro.montoEstimado, analytics.monedaSimbolo)
+                            : 'Sin oportunidad'
+                    }}
+                </strong>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Version modelo</span>
+                <strong>{{ analytics.metadata.versionModelo }}</strong>
+            </div>
+        </div>
+
+        <div class="profile-box">
+            <p-tag [value]="analytics.segmentacion.fuente === 'ML_SERVICE' ? 'ML' : 'FALLBACK'" [severity]="analytics.segmentacion.fuente === 'ML_SERVICE' ? 'success' : 'warn'"></p-tag>
+            <h4>{{ analytics.segmentacion.perfil.nombre }}</h4>
+            <p>{{ analytics.segmentacion.perfil.descripcion }}</p>
+        </div>
+    </div>
+
+    <div class="card" *ngIf="financeSummary() as finance">
+        <div class="section-title">
+            <h3>Alertas y actividad</h3>
+            <p>Alertas financieras calculadas desde el balance real del usuario.</p>
+        </div>
+
+        <div class="alert-list" *ngIf="finance.alertas.length; else noFinanceAlerts">
+            <article class="alert-item" *ngFor="let alerta of finance.alertas">
+                <div class="alert-meta">
+                    <p-tag [value]="alerta.tipo" [severity]="getAlertSeverity(alerta.tipo)"></p-tag>
+                    <span>{{ alerta.monedaCodigo ?? 'GLOBAL' }}</span>
+                </div>
+                <strong>{{ alerta.titulo }}</strong>
+                <p>{{ alerta.mensaje }}</p>
+            </article>
+        </div>
+        <ng-template #noFinanceAlerts>
+            <p class="empty-copy">No hay alertas financieras activas.</p>
+        </ng-template>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="card" *ngIf="analyticsInsights() as analytics">
+        <div class="section-title">
+            <h3>Prediccion por categoria</h3>
+            <p>Top de categorias proyectadas para {{ analytics.prediccion.proximoMes }}.</p>
+        </div>
+        <p-table [value]="analytics.prediccion.items" [tableStyle]="{ 'min-width': '36rem' }" dataKey="categoriaNombre">
+            <ng-template #header>
+                <tr>
+                    <th>Categoria</th>
+                    <th>Tendencia</th>
+                    <th>Predicho</th>
+                    <th>Presupuesto</th>
+                    <th>Confianza</th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-item>
+                <tr>
+                    <td>{{ item.categoriaNombre }}</td>
+                    <td><p-tag [value]="item.tendencia" [severity]="getTrendSeverity(item.tendencia)"></p-tag></td>
+                    <td>{{ formatMoney(item.montoPredicho, analytics.monedaSimbolo) }}</td>
+                    <td>{{ item.montoPresupuestoSugerido !== null ? formatMoney(item.montoPresupuestoSugerido, analytics.monedaSimbolo) : '-' }}</td>
+                    <td>{{ formatPercent(item.confianza) }}</td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr><td colspan="5">No hay predicciones disponibles.</td></tr>
+            </ng-template>
+        </p-table>
+    </div>
+
+    <div class="card" *ngIf="analyticsInsights() as analytics">
+        <div class="section-title">
+            <h3>Anomalias</h3>
+            <p>Movimientos atipicos detectados sobre egresos historicos.</p>
+        </div>
+        <p-table [value]="analytics.anomalias.items" [tableStyle]="{ 'min-width': '36rem' }" dataKey="fecha">
+            <ng-template #header>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Categoria</th>
+                    <th>Severidad</th>
+                    <th>Monto</th>
+                    <th>Motivo</th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-item>
+                <tr>
+                    <td>{{ formatDate(item.fecha) }}</td>
+                    <td>{{ item.categoriaNombre }}</td>
+                    <td><p-tag [value]="item.severidad" [severity]="getAnomalySeverity(item.severidad)"></p-tag></td>
+                    <td>{{ formatMoney(item.monto, item.monedaSimbolo) }}</td>
+                    <td>{{ item.motivo }}</td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr><td colspan="5">No se detectaron anomalias.</td></tr>
+            </ng-template>
+        </p-table>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="card" *ngIf="financeSummary() as finance">
+        <div class="section-title">
+            <h3>Ultimas transacciones</h3>
+            <p>Actividad reciente entregada por el resumen financiero.</p>
+        </div>
+        <p-table [value]="finance.ultimasTransacciones" [tableStyle]="{ 'min-width': '36rem' }" dataKey="id">
+            <ng-template #header>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Concepto</th>
+                    <th>Cuenta</th>
+                    <th>Monto</th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-item>
+                <tr>
+                    <td>{{ formatDateTime(item.fecha) }}</td>
+                    <td><p-tag [value]="item.tipo" [severity]="getMovementSeverity(item.tipo)"></p-tag></td>
+                    <td>{{ item.concepto }}</td>
+                    <td>{{ item.cuentaAlias }}</td>
+                    <td>{{ formatMoney(item.monto, item.monedaSimbolo) }}</td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr><td colspan="5">No hay transacciones recientes.</td></tr>
+            </ng-template>
+        </p-table>
+    </div>
+
+    <div class="card" *ngIf="operationalSummary() as operational">
+        <div class="section-title">
+            <h3>Salud operativa</h3>
+            <p>Resumen corto de bitacoras para administradores.</p>
+        </div>
+
+        <div class="ops-grid">
+            <article class="ops-card">
+                <span>Errores</span>
+                <strong>{{ operational.serviceErrors.length }}</strong>
+            </article>
+            <article class="ops-card">
+                <span>WhatsApp</span>
+                <strong>{{ operational.whatsapp.length }}</strong>
+            </article>
+            <article class="ops-card">
+                <span>Correos</span>
+                <strong>{{ operational.emails.length }}</strong>
+            </article>
+            <article class="ops-card">
+                <span>Push</span>
+                <strong>{{ operational.push.length }}</strong>
+            </article>
+        </div>
+
+        <p-table [value]="operational.serviceErrors" [tableStyle]="{ 'min-width': '36rem' }" dataKey="id">
+            <ng-template #header>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Modulo</th>
+                    <th>Status</th>
+                    <th>Mensaje</th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-item>
+                <tr>
+                    <td>{{ formatDateTime(item.fechaRegistro) }}</td>
+                    <td>{{ item.moduleName ?? item.serviceName ?? '-' }}</td>
+                    <td><p-tag [value]="formatStatusCode(item.statusCode)" [severity]="getStatusSeverity(item.statusCode)"></p-tag></td>
+                    <td>{{ item.message }}</td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr><td colspan="4">No hay errores recientes.</td></tr>
+            </ng-template>
+        </p-table>
+    </div>
+</div>

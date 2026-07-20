@@ -30,6 +30,7 @@ import { RolesService } from '../../services/roles.service';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PermisoModulo, PermisoOpcion, PermisoAccion } from './interfaces/permiso.interface';
 import { Rol } from '../roles/interfaces/rol.interface';
+import { HasActionDirective } from '../../../../shared/directives/has-action.directive';
 interface Column {
     field: string;
     header: string;
@@ -67,7 +68,8 @@ interface ExportColumn {
         ReactiveFormsModule,
         InputSwitchModule,
         DropdownModule,
-        LoadingOverlayComponent
+        LoadingOverlayComponent,
+        HasActionDirective
     ],
     templateUrl: './permisos.component.html',
     styleUrls: ['./permisos.component.scss'],

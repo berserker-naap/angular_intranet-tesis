@@ -65,6 +65,65 @@ export class AuthService {
         }
     }
 
+    getRoles(): string[] {
+        return (this.getSession()?.roles ?? [])
+            .map((role) => `${role ?? ''}`.trim().toUpperCase())
+            .filter(Boolean);
+    }
+
+    hasAnyRole(expectedRoles: string[] = []): boolean {
+        if (!expectedRoles.length) return true;
+
+        const currentRoles = new Set(this.getRoles());
+        return expectedRoles.some((role) => currentRoles.has(`${role ?? ''}`.trim().toUpperCase()));
+    }
+
+    hasAdministradorRole(): boolean {
+        return this.hasAnyRole(['ADMINISTRADOR']);
+    }
+
+    hasAnyPathAccess(paths: string[] = []): boolean {
+        if (!paths.length || this.hasAdministradorRole()) return true;
+
+        const normalizedTargets = new Set(paths.map((path) => this.normalizePath(path)).filter(Boolean));
+        if (!normalizedTargets.size) return true;
+
+        return this.getPermissionOptions().some((option) => {
+            const currentPath = this.normalizePath(option?.path);
+            return !!currentPath && normalizedTargets.has(currentPath);
+        });
+    }
+
+    hasAnyVisibleNavigationAccess(paths: string[] = []): boolean {
+        if (!paths.length || this.hasAdministradorRole()) return true;
+
+        const normalizedTargets = new Set(paths.map((path) => this.normalizePath(path)).filter(Boolean));
+        if (!normalizedTargets.size) return true;
+
+        return this.getPermissionOptions().some((option) => {
+            const currentPath = this.normalizePath(option?.path);
+            return !!currentPath && option?.isVisibleNavegacion !== false && normalizedTargets.has(currentPath);
+        });
+    }
+
+    hasActionAccess(paths: string | string[] = [], actions: string | string[] = []): boolean {
+        if (this.hasAdministradorRole()) return true;
+
+        const targetPaths = (Array.isArray(paths) ? paths : [paths]).map((path) => this.normalizePath(path)).filter(Boolean);
+        const targetActions = (Array.isArray(actions) ? actions : [actions]).map((action) => this.normalizeAction(action)).filter(Boolean);
+
+        if (!targetPaths.length) return true;
+        if (!targetActions.length) return this.hasAnyPathAccess(targetPaths);
+
+        return this.getPermissionOptions().some((option) => {
+            const currentPath = this.normalizePath(option?.path);
+            if (!currentPath || !targetPaths.includes(currentPath)) return false;
+
+            const optionActions = Array.isArray(option?.acciones) ? option.acciones : [];
+            return optionActions.some((action) => targetActions.includes(this.normalizeAction(action?.nombre)));
+        });
+    }
+
     isRemembered(): boolean {
         return localStorage.getItem(this.REMEMBER_KEY) === 'true';
     }
@@ -152,5 +211,28 @@ export class AuthService {
     private isSuccessResponse(response: any): boolean {
         if (typeof response?.ok === 'boolean') return response.ok;
         return !!this.extractToken(this.extractSessionFromLoginResponse(response));
+    }
+
+    private getPermissionOptions(): Array<{ path?: string | null; isVisibleNavegacion?: boolean | null; acciones?: Array<{ nombre?: string | null }> }> {
+        const permisos = this.getSession()?.permisos;
+        if (!Array.isArray(permisos)) return [];
+
+        return permisos.flatMap((modulo: any) =>
+            Array.isArray(modulo?.opciones) ? modulo.opciones : []
+        );
+    }
+
+    private normalizePath(value: string | null | undefined): string {
+        const normalized = `${value ?? ''}`.trim().toLowerCase().replace(/\/+$/, '');
+        if (!normalized) return '';
+        return normalized.startsWith('/') ? normalized : `/${normalized}`;
+    }
+
+    private normalizeAction(value: string | null | undefined): string {
+        return `${value ?? ''}`
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim()
+            .toUpperCase();
     }
 }

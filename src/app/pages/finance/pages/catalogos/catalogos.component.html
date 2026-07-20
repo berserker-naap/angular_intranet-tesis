@@ -1,0 +1,124 @@
+<p-toast></p-toast>
+<app-loading-overlay [loading]="(loading$ | async) ?? false"></app-loading-overlay>
+
+<div class="card">
+    <p-toolbar styleClass="mb-4">
+        <ng-template #start>
+            <div class="toolbar-title">
+                <h2>Catalogos financieros</h2>
+                <p>Primera sección operativa conectada al módulo `finance`: entidades financieras, categorías y subcategorías.</p>
+            </div>
+        </ng-template>
+        <ng-template #end>
+            <p-button label="Actualizar" icon="pi pi-refresh" (click)="loadInitialData()"></p-button>
+        </ng-template>
+    </p-toolbar>
+
+    <div class="filters-row">
+        <div class="filter-box">
+            <label for="tipoCategoria">Tipo de categoria</label>
+            <p-select
+                inputId="tipoCategoria"
+                [options]="tiposCategoria"
+                [(ngModel)]="selectedTipo"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Selecciona tipo"
+                (onChange)="onTipoChange()"
+            ></p-select>
+        </div>
+
+        <div class="filter-box">
+            <label for="categoriaSelect">Categoria base</label>
+            <p-select
+                inputId="categoriaSelect"
+                [options]="categorias()"
+                [(ngModel)]="selectedCategoriaId"
+                optionLabel="nombre"
+                optionValue="id"
+                placeholder="Selecciona una categoria"
+                (onChange)="onCategoriaChange()"
+            ></p-select>
+        </div>
+    </div>
+</div>
+
+<div class="catalog-grid">
+    <div class="card">
+        <div class="section-title">
+            <h3>Entidades financieras</h3>
+            <p>Listado maestro consumido desde `finance/entidades-financieras`.</p>
+        </div>
+        <p-table [value]="entidades()" [paginator]="true" [rows]="8" [tableStyle]="{ 'min-width': '26rem' }" dataKey="id">
+            <ng-template #header>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-item>
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.nombre }}</td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr><td colspan="2">No hay entidades financieras disponibles.</td></tr>
+            </ng-template>
+        </p-table>
+    </div>
+
+    <div class="card">
+        <div class="section-title">
+            <h3>Categorias</h3>
+            <p>Catalogo base para ingresos y egresos.</p>
+        </div>
+        <p-table [value]="categorias()" [paginator]="true" [rows]="8" [tableStyle]="{ 'min-width': '32rem' }" dataKey="id">
+            <ng-template #header>
+                <tr>
+                    <th>ID</th>
+                    <th>Tipo</th>
+                    <th>Nombre</th>
+                    <th>Orden</th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-item>
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td><p-tag [value]="item.tipo" [severity]="getTipoSeverity(item.tipo)"></p-tag></td>
+                    <td>{{ item.nombre }}</td>
+                    <td>{{ item.orden ?? '-' }}</td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr><td colspan="4">No hay categorias disponibles.</td></tr>
+            </ng-template>
+        </p-table>
+    </div>
+
+    <div class="card">
+        <div class="section-title">
+            <h3>Subcategorias</h3>
+            <p>Se cargan desde la categoría seleccionada.</p>
+        </div>
+        <p-table [value]="subcategorias()" [paginator]="true" [rows]="8" [tableStyle]="{ 'min-width': '28rem' }" dataKey="id">
+            <ng-template #header>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Orden</th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-item>
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.nombre }}</td>
+                    <td>{{ item.orden ?? '-' }}</td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr><td colspan="3">No hay subcategorias para la categoria seleccionada.</td></tr>
+            </ng-template>
+        </p-table>
+    </div>
+</div>

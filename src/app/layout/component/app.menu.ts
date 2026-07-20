@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { MenuItem } from 'primeng/api';
+import { AuthService } from '../../pages/auth/services/auth.service';
 import { AppMenuitem } from './app.menuitem';
 
 @Component({
@@ -18,186 +19,57 @@ import { AppMenuitem } from './app.menuitem';
 export class AppMenu {
     model: MenuItem[] = [];
 
+    constructor(private readonly authService: AuthService) {}
+
     ngOnInit() {
-        this.model = [
-             {
+        this.model = this.removeEmptyGroups([
+            {
                 label: 'Home',
                 items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/'] }]
             },
             {
                 label: 'Seguridad',
                 items: [
-                    { label: 'Usuarios', icon: 'pi pi-fw pi-home', routerLink: ['security/usuario'] },
-                    
-                    { label: 'Roles', icon: 'pi pi-fw pi-home', routerLink: ['security/rol'] },
-                    { label: 'Permisos', icon: 'pi pi-fw pi-home', routerLink: ['security/permiso'] },
-                    { label: 'Modulos', icon: 'pi pi-fw pi-home', routerLink: ['security/modulo'] },
-                    { label: 'Opciones', icon: 'pi pi-fw pi-home', routerLink: ['security/opcion'] },
-                    { label: 'Acciones', icon: 'pi pi-fw pi-home', routerLink: ['security/accion'] },
-                    { label: 'Multitabla', icon: 'pi pi-fw pi-home', routerLink: ['security/multitabla'] },
-                ]
-            },
-            {
-                label: 'Finanzas',
-                items: [
-                    { label: 'Bancos', icon: 'pi pi-fw pi-home', routerLink: ['security/persona'] },
-                    { label: 'Cronogramas', icon: 'pi pi-fw pi-home', routerLink: ['security/persona'] },
-                    { label: 'Cuenta', icon: 'pi pi-fw pi-home', routerLink: ['security/persona'] },
-                    { label: 'Tipo de Cuenta', icon: 'pi pi-fw pi-home', routerLink: ['security/modulo'] },
-                    { label: 'Categorias', icon: 'pi pi-fw pi-home', routerLink: ['security/persona'] },
-                    { label: 'Sub Categorias', icon: 'pi pi-fw pi-home', routerLink: ['security/usuario'] },
-                    { label: 'Ingresos', icon: 'pi pi-fw pi-home', routerLink: ['security/rol'] },
-                    { label: 'Egresos', icon: 'pi pi-fw pi-home', routerLink: ['security/permiso'] },
-                    { label: 'Transacciones', icon: 'pi pi-fw pi-home', routerLink: ['security/opcion'] },
-                ]
-            },
-            {
-                label: 'IA',
-                items: [
-                    { label: 'Consultas', icon: 'pi pi-fw pi-home', routerLink: ['security/usuario'] },
+                    this.buildProtectedItem('Usuarios', 'pi pi-fw pi-users', ['/security/usuarios'], ['/security/usuarios', '/security/usuario']),
+                    this.buildProtectedItem('Roles', 'pi pi-fw pi-id-card', ['/security/roles'], ['/security/roles', '/security/rol']),
+                    this.buildProtectedItem('Permisos', 'pi pi-fw pi-shield', ['/security/permisos'], ['/security/permisos', '/security/permiso']),
+                    this.buildProtectedItem('Modulos', 'pi pi-fw pi-box', ['/security/modulos'], ['/security/modulos', '/security/modulo']),
+                    this.buildProtectedItem('Opciones', 'pi pi-fw pi-list', ['/security/opciones'], ['/security/opciones', '/security/opcion']),
+                    this.buildProtectedItem('Acciones', 'pi pi-fw pi-bolt', ['/security/acciones'], ['/security/acciones', '/security/accion']),
+                    this.buildProtectedItem('Multitabla', 'pi pi-fw pi-table', ['/security/multitabla'], ['/security/multitabla']),
+                    this.buildProtectedItem('Reportes', 'pi pi-fw pi-chart-bar', ['/security/reportes'], ['/security/reportes'])
                 ]
             },
             {
                 label: 'Comunicaciones',
-                items: [
-                    { label: 'Campañas', icon: 'pi pi-fw pi-megaphone', routerLink: ['security/campanas'] },
-                ]
+                items: [this.buildProtectedItem('Campanas', 'pi pi-fw pi-megaphone', ['/security/campanas'], ['/security/campanas'])]
             },
             {
-                label: 'REPORTES',
+                label: 'Finanzas',
                 items: [
-                    { label: 'Consultas', icon: 'pi pi-fw pi-home', routerLink: ['security/usuario'] },
-                ]
-            },
-
-            {
-                label: 'UI Components',
-                items: [
-                    { label: 'Form Layout', icon: 'pi pi-fw pi-id-card', routerLink: ['/uikit/formlayout'] },
-                    { label: 'Input', icon: 'pi pi-fw pi-check-square', routerLink: ['/uikit/input'] },
-                    { label: 'Button', icon: 'pi pi-fw pi-mobile', class: 'rotated-icon', routerLink: ['/uikit/button'] },
-                    { label: 'Table', icon: 'pi pi-fw pi-table', routerLink: ['/uikit/table'] },
-                    { label: 'List', icon: 'pi pi-fw pi-list', routerLink: ['/uikit/list'] },
-                    { label: 'Tree', icon: 'pi pi-fw pi-share-alt', routerLink: ['/uikit/tree'] },
-                    { label: 'Panel', icon: 'pi pi-fw pi-tablet', routerLink: ['/uikit/panel'] },
-                    { label: 'Overlay', icon: 'pi pi-fw pi-clone', routerLink: ['/uikit/overlay'] },
-                    { label: 'Media', icon: 'pi pi-fw pi-image', routerLink: ['/uikit/media'] },
-                    { label: 'Menu', icon: 'pi pi-fw pi-bars', routerLink: ['/uikit/menu'] },
-                    { label: 'Message', icon: 'pi pi-fw pi-comment', routerLink: ['/uikit/message'] },
-                    { label: 'File', icon: 'pi pi-fw pi-file', routerLink: ['/uikit/file'] },
-                    { label: 'Chart', icon: 'pi pi-fw pi-chart-bar', routerLink: ['/uikit/charts'] },
-                    { label: 'Timeline', icon: 'pi pi-fw pi-calendar', routerLink: ['/uikit/timeline'] },
-                    { label: 'Misc', icon: 'pi pi-fw pi-circle', routerLink: ['/uikit/misc'] }
-                ]
-            },
-            {
-                label: 'Pages',
-                icon: 'pi pi-fw pi-briefcase',
-                routerLink: ['/pages'],
-                items: [
-                    {
-                        label: 'Landing',
-                        icon: 'pi pi-fw pi-globe',
-                        routerLink: ['/landing']
-                    },
-                    {
-                        label: 'Auth',
-                        icon: 'pi pi-fw pi-user',
-                        items: [
-                            {
-                                label: 'Login',
-                                icon: 'pi pi-fw pi-sign-in',
-                                routerLink: ['/auth/login']
-                            },
-                            {
-                                label: 'Error',
-                                icon: 'pi pi-fw pi-times-circle',
-                                routerLink: ['/auth/error']
-                            },
-                            {
-                                label: 'Access Denied',
-                                icon: 'pi pi-fw pi-lock',
-                                routerLink: ['/auth/access']
-                            }
-                        ]
-                    },
-                    {
-                        label: 'Crud',
-                        icon: 'pi pi-fw pi-pencil',
-                        routerLink: ['/pages/crud']
-                    },
-                    {
-                        label: 'Not Found',
-                        icon: 'pi pi-fw pi-exclamation-circle',
-                        routerLink: ['/pages/notfound']
-                    },
-                    {
-                        label: 'Empty',
-                        icon: 'pi pi-fw pi-circle-off',
-                        routerLink: ['/pages/empty']
-                    }
-                ]
-            },
-            // {
-            //     label: 'Hierarchy',
-            //     items: [
-            //         {
-            //             label: 'Submenu 1',
-            //             icon: 'pi pi-fw pi-bookmark',
-            //             items: [
-            //                 {
-            //                     label: 'Submenu 1.1',
-            //                     icon: 'pi pi-fw pi-bookmark',
-            //                     items: [
-            //                         { label: 'Submenu 1.1.1', icon: 'pi pi-fw pi-bookmark' },
-            //                         { label: 'Submenu 1.1.2', icon: 'pi pi-fw pi-bookmark' },
-            //                         { label: 'Submenu 1.1.3', icon: 'pi pi-fw pi-bookmark' }
-            //                     ]
-            //                 },
-            //                 {
-            //                     label: 'Submenu 1.2',
-            //                     icon: 'pi pi-fw pi-bookmark',
-            //                     items: [{ label: 'Submenu 1.2.1', icon: 'pi pi-fw pi-bookmark' }]
-            //                 }
-            //             ]
-            //         },
-            //         {
-            //             label: 'Submenu 2',
-            //             icon: 'pi pi-fw pi-bookmark',
-            //             items: [
-            //                 {
-            //                     label: 'Submenu 2.1',
-            //                     icon: 'pi pi-fw pi-bookmark',
-            //                     items: [
-            //                         { label: 'Submenu 2.1.1', icon: 'pi pi-fw pi-bookmark' },
-            //                         { label: 'Submenu 2.1.2', icon: 'pi pi-fw pi-bookmark' }
-            //                     ]
-            //                 },
-            //                 {
-            //                     label: 'Submenu 2.2',
-            //                     icon: 'pi pi-fw pi-bookmark',
-            //                     items: [{ label: 'Submenu 2.2.1', icon: 'pi pi-fw pi-bookmark' }]
-            //                 }
-            //             ]
-            //         }
-            //     ]
-            // },
-            {
-                label: 'Get Started',
-                items: [
-                    {
-                        label: 'Documentation',
-                        icon: 'pi pi-fw pi-book',
-                        routerLink: ['/documentation']
-                    },
-                    {
-                        label: 'View Source',
-                        icon: 'pi pi-fw pi-github',
-                        url: 'https://github.com/primefaces/sakai-ng',
-                        target: '_blank'
-                    }
+                    this.buildProtectedItem('Resumen', 'pi pi-fw pi-chart-line', ['/finance/resumen'], ['/finance/resumen']),
+                    this.buildProtectedItem('Catalogos', 'pi pi-fw pi-wallet', ['/finance/catalogos'], ['/finance/catalogos'])
                 ]
             }
-        ];
+        ]);
+    }
+
+    private buildProtectedItem(label: string, icon: string, routerLink: string[], paths: string[]): MenuItem {
+        return {
+            label,
+            icon,
+            routerLink,
+            visible: this.authService.hasAnyVisibleNavigationAccess(paths)
+        };
+    }
+
+    private removeEmptyGroups(items: MenuItem[]): MenuItem[] {
+        return items
+            .map((item) => ({
+                ...item,
+                items: item.items ? this.removeEmptyGroups(item.items) : item.items
+            }))
+            .filter((item) => item.visible !== false)
+            .filter((item) => !item.items || item.items.length > 0);
     }
 }

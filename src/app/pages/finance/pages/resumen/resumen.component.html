@@ -1,0 +1,320 @@
+<p-toast></p-toast>
+<app-loading-overlay [loading]="(loading$ | async) ?? false"></app-loading-overlay>
+
+<div class="card">
+    <p-toolbar styleClass="mb-4">
+        <ng-template #start>
+            <div class="toolbar-title">
+                <h2>Operacion financiera</h2>
+                <p>Vista real de cuentas, saldos, alertas y movimientos recientes conectada a `finance`.</p>
+            </div>
+        </ng-template>
+        <ng-template #end>
+            <p-button label="Actualizar" icon="pi pi-refresh" (click)="loadDashboard()"></p-button>
+        </ng-template>
+    </p-toolbar>
+
+    <div class="stats-grid" *ngIf="resumen() as summary">
+        <div class="stat-card accent-indigo">
+            <span class="stat-label">Cuentas activas</span>
+            <strong class="stat-value">{{ summary.totalAccounts }}</strong>
+            <small>Total de cuentas visibles para el usuario actual.</small>
+        </div>
+        <div class="stat-card accent-green">
+            <span class="stat-label">Disponible PEN</span>
+            <strong class="stat-value">{{ formatMoney(summary.totalDisponiblePen, 'S/') }}</strong>
+            <small>Saldo liquido sin tarjetas de credito.</small>
+        </div>
+        <div class="stat-card accent-blue">
+            <span class="stat-label">Disponible USD</span>
+            <strong class="stat-value">{{ formatMoney(summary.totalDisponibleUsd, '$') }}</strong>
+            <small>Saldo liquido en cuentas en dolares.</small>
+        </div>
+        <div class="stat-card accent-amber">
+            <span class="stat-label">Deuda tarjetas PEN</span>
+            <strong class="stat-value">{{ formatMoney(summary.deudaTarjetaPen, 'S/') }}</strong>
+            <small>Consumo pendiente sobre lineas de credito en soles.</small>
+        </div>
+        <div class="stat-card accent-rose">
+            <span class="stat-label">Deuda tarjetas USD</span>
+            <strong class="stat-value">{{ formatMoney(summary.deudaTarjetaUsd, '$') }}</strong>
+            <small>Consumo pendiente sobre lineas de credito en dolares.</small>
+        </div>
+        <div class="stat-card accent-slate">
+            <span class="stat-label">Saldo contable</span>
+            <strong class="stat-value">{{ formatMoney(summary.totalSaldoPen, 'S/') }} | {{ formatMoney(summary.totalSaldoUsd, '$') }}</strong>
+            <small>Incluye disponibilidad de tarjetas segun el backend.</small>
+        </div>
+    </div>
+
+    <div class="filters-row">
+        <div class="filter-box">
+            <label for="cuentaSelect">Cuenta</label>
+            <p-select
+                inputId="cuentaSelect"
+                [options]="cuentas()"
+                [(ngModel)]="selectedCuentaId"
+                optionLabel="alias"
+                optionValue="id"
+                placeholder="Todas las cuentas"
+            ></p-select>
+        </div>
+
+        <div class="filter-box">
+            <label for="tipoSelect">Tipo</label>
+            <p-select
+                inputId="tipoSelect"
+                [options]="tiposMovimiento"
+                [(ngModel)]="selectedTipo"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Todos los tipos"
+            ></p-select>
+        </div>
+
+        <div class="filter-box">
+            <label for="searchInput">Busqueda</label>
+            <input id="searchInput" pInputText [(ngModel)]="search" placeholder="Concepto, cuenta o entidad" />
+        </div>
+
+        <div class="filter-box">
+            <label for="fechaDesde">Desde</label>
+            <input id="fechaDesde" pInputText type="date" [(ngModel)]="fechaDesde" />
+        </div>
+
+        <div class="filter-box">
+            <label for="fechaHasta">Hasta</label>
+            <input id="fechaHasta" pInputText type="date" [(ngModel)]="fechaHasta" />
+        </div>
+
+        <div class="filter-actions">
+            <p-button label="Filtrar" icon="pi pi-filter" (click)="applyFilters()"></p-button>
+            <p-button label="Limpiar" severity="secondary" icon="pi pi-eraser" (click)="resetFilters()"></p-button>
+        </div>
+    </div>
+</div>
+
+<div class="alert-grid" *ngIf="resumen()?.alertas?.length">
+    <div class="card alert-card" *ngFor="let alerta of resumen()?.alertas">
+        <div class="alert-head">
+            <p-tag [value]="alerta.tipo" [severity]="getAlertSeverity(alerta.tipo)"></p-tag>
+            <span class="alert-code">{{ alerta.monedaCodigo ?? 'GLOBAL' }}</span>
+        </div>
+        <h3>{{ alerta.titulo }}</h3>
+        <p>{{ alerta.mensaje }}</p>
+    </div>
+</div>
+
+<div class="finance-grid">
+    <div class="card">
+        <div class="section-title">
+            <h3>Resumen mensual por moneda</h3>
+            <p>Comparativo del mes actual con la base calculada por `balance-account`.</p>
+        </div>
+        <p-table [value]="resumen()?.resumenMesPorMoneda ?? []" [tableStyle]="{ 'min-width': '32rem' }" dataKey="monedaCodigo">
+            <ng-template #header>
+                <tr>
+                    <th>Moneda</th>
+                    <th>Ingresos</th>
+                    <th>Egresos</th>
+                    <th>Balance</th>
+                    <th>Ahorro</th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-item>
+                <tr>
+                    <td>{{ item.monedaCodigo }}</td>
+                    <td>{{ formatMoney(item.ingresos, item.monedaSimbolo) }}</td>
+                    <td>{{ formatMoney(item.egresos, item.monedaSimbolo) }}</td>
+                    <td [class.balance-negative]="item.balance < 0">{{ formatMoney(item.balance, item.monedaSimbolo) }}</td>
+                    <td>{{ formatPercent(item.porcentajeAhorro) }}</td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr><td colspan="5">No hay resumen mensual disponible.</td></tr>
+            </ng-template>
+        </p-table>
+    </div>
+
+    <div class="card">
+        <div class="section-title">
+            <h3>Distribucion por tipo de cuenta</h3>
+            <p>Saldo consolidado por tipo y moneda.</p>
+        </div>
+        <p-table [value]="resumen()?.saldoPorTipoCuenta ?? []" [tableStyle]="{ 'min-width': '32rem' }" dataKey="tipoCuenta">
+            <ng-template #header>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Moneda</th>
+                    <th>Cantidad</th>
+                    <th>Saldo</th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-item>
+                <tr>
+                    <td>{{ item.tipoCuenta }}</td>
+                    <td>{{ item.monedaCodigo }}</td>
+                    <td>{{ item.cantidad }}</td>
+                    <td>{{ formatMoney(item.saldoTotal, item.monedaSimbolo) }}</td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr><td colspan="4">No hay cuentas consolidadas.</td></tr>
+            </ng-template>
+        </p-table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-title">
+        <h3>Cuentas activas</h3>
+        <p>Conectado a `finance/cuentas` para validar saldos, tarjetas y fechas de pago reales.</p>
+    </div>
+    <p-table [value]="cuentas()" [paginator]="true" [rows]="8" [tableStyle]="{ 'min-width': '70rem' }" dataKey="id">
+        <ng-template #header>
+            <tr>
+                <th>ID</th>
+                <th>Cuenta</th>
+                <th>Tipo</th>
+                <th>Moneda</th>
+                <th>Entidad</th>
+                <th>Saldo</th>
+                <th>Linea</th>
+                <th>Deuda</th>
+                <th>Pago</th>
+            </tr>
+        </ng-template>
+        <ng-template #body let-item>
+            <tr>
+                <td>{{ item.id }}</td>
+                <td>
+                    <div class="account-cell">
+                        <strong>{{ item.alias }}</strong>
+                        <small>{{ item.tipoCuenta.nombre }}</small>
+                    </div>
+                </td>
+                <td>
+                    <p-tag [value]="item.esTarjetaCredito ? 'TARJETA' : 'CUENTA'" [severity]="item.esTarjetaCredito ? 'warn' : 'success'"></p-tag>
+                </td>
+                <td>{{ item.moneda.codigo }}</td>
+                <td>{{ item.entidadFinanciera?.nombre ?? '-' }}</td>
+                <td>{{ formatMoney(item.saldoActual, item.moneda.simbolo) }}</td>
+                <td>{{ item.lineaCredito !== null ? formatMoney(item.lineaCredito, item.moneda.simbolo) : '-' }}</td>
+                <td>{{ item.esTarjetaCredito ? formatMoney(getCuentaDeuda(item), item.moneda.simbolo) : '-' }}</td>
+                <td>{{ item.proximaFechaPago ? formatDate(item.proximaFechaPago) : '-' }}</td>
+            </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+            <tr><td colspan="9">No hay cuentas activas disponibles.</td></tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<div class="finance-grid">
+    <div class="card">
+        <div class="section-title">
+            <h3>Totales del filtro actual</h3>
+            <p>Resumen de los movimientos encontrados segun la consulta aplicada.</p>
+        </div>
+        <p-table [value]="totalesPorMoneda()" [tableStyle]="{ 'min-width': '32rem' }" dataKey="monedaCodigo">
+            <ng-template #header>
+                <tr>
+                    <th>Moneda</th>
+                    <th>Ingresos</th>
+                    <th>Egresos</th>
+                    <th>Balance</th>
+                    <th>Items</th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-item>
+                <tr>
+                    <td>{{ item.monedaCodigo }}</td>
+                    <td>{{ formatMoney(item.ingresos, item.monedaSimbolo) }}</td>
+                    <td>{{ formatMoney(item.egresos, item.monedaSimbolo) }}</td>
+                    <td [class.balance-negative]="item.balance < 0">{{ formatMoney(item.balance, item.monedaSimbolo) }}</td>
+                    <td>{{ item.cantidad }}</td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr><td colspan="5">No hay totales disponibles para el filtro actual.</td></tr>
+            </ng-template>
+        </p-table>
+    </div>
+
+    <div class="card">
+        <div class="section-title">
+            <h3>Ultimas transacciones visibles</h3>
+            <p>Resumen corto entregado por `balance-account`.</p>
+        </div>
+        <p-table [value]="resumen()?.ultimasTransacciones ?? []" [tableStyle]="{ 'min-width': '32rem' }" dataKey="id">
+            <ng-template #header>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Concepto</th>
+                    <th>Cuenta</th>
+                    <th>Monto</th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-item>
+                <tr>
+                    <td>{{ formatDateTime(item.fecha) }}</td>
+                    <td><p-tag [value]="item.tipo" [severity]="getTransactionSeverity(item.tipo)"></p-tag></td>
+                    <td>{{ item.concepto }}</td>
+                    <td>{{ item.cuentaAlias }}</td>
+                    <td>{{ formatMoney(item.monto, item.monedaSimbolo) }}</td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr><td colspan="5">No hay movimientos recientes en el resumen.</td></tr>
+            </ng-template>
+        </p-table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="section-title">
+        <h3>Movimientos</h3>
+        <p>{{ totalResultados() }} resultados totales. La tabla muestra hasta {{ limit }} registros por consulta.</p>
+    </div>
+    <p-table [value]="transacciones()" [paginator]="true" [rows]="10" [tableStyle]="{ 'min-width': '82rem' }" dataKey="id">
+        <ng-template #header>
+            <tr>
+                <th>ID</th>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Concepto</th>
+                <th>Categoria</th>
+                <th>Cuenta</th>
+                <th>Entidad</th>
+                <th>Origen</th>
+                <th>Monto</th>
+                <th>Editable</th>
+            </tr>
+        </ng-template>
+        <ng-template #body let-item>
+            <tr>
+                <td>{{ item.id }}</td>
+                <td>{{ formatDateTime(item.fecha) }}</td>
+                <td><p-tag [value]="item.tipo" [severity]="getTransactionSeverity(item.tipo)"></p-tag></td>
+                <td>
+                    <div class="transaction-cell">
+                        <strong>{{ item.concepto }}</strong>
+                        <small *ngIf="item.nota">{{ item.nota }}</small>
+                    </div>
+                </td>
+                <td>{{ item.categoriaNombre ?? item.subcategoriaNombre ?? '-' }}</td>
+                <td>{{ item.cuentaAlias }}</td>
+                <td>{{ item.entidadFinancieraNombre ?? '-' }}</td>
+                <td>{{ item.origen }}</td>
+                <td>{{ formatMoney(item.monto, item.monedaSimbolo) }}</td>
+                <td>
+                    <p-tag [value]="item.editable ? 'SI' : 'NO'" [severity]="item.editable ? 'success' : 'secondary'"></p-tag>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+            <tr><td colspan="10">No hay movimientos para los filtros seleccionados.</td></tr>
+        </ng-template>
+    </p-table>
+</div>

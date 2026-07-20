@@ -3,7 +3,7 @@
         <div class="flex items-center justify-between">
             <h1 class="font-semibold text-xl mb-0">Multitabla</h1>
             <div>
-                <p-button label="Nuevo" icon="pi pi-plus" severity="success" class="mr-2" (click)="openNew()" />
+                <p-button label="Nuevo" icon="pi pi-plus" severity="success" class="mr-2" appHasAction="Crear" appHasActionPath="/security/multitabla" (click)="openNew()" />
                 <p-button label="Exportar" icon="pi pi-upload" severity="secondary" (click)="exportExcel()" />
             </div>
         </div>
@@ -18,7 +18,7 @@
                 <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Buscar..." />
             </p-iconfield>
 
-            <p-button severity="danger" label="Eliminar" icon="pi pi-trash" outlined
+            <p-button severity="danger" label="Eliminar" icon="pi pi-trash" outlined appHasAction="Eliminar" appHasActionPath="/security/multitabla"
                 (click)="deleteSelectedMultitablas()" [disabled]="!selectedMultitablas?.length" />
         </div>
 
@@ -29,7 +29,7 @@
 
             <ng-template #header>
                 <tr>
-                    <th style="width: 3rem">
+                    <th style="width: 3rem" appHasAction="Eliminar" appHasActionPath="/security/multitabla">
                         <p-tableHeaderCheckbox />
                     </th>
                     <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
@@ -39,12 +39,12 @@
 
             <ng-template #body let-multitabla>
                 <tr>
-                    <td><p-tableCheckbox [value]="multitabla" /></td>
+                    <td appHasAction="Eliminar" appHasActionPath="/security/multitabla"><p-tableCheckbox [value]="multitabla" /></td>
                     <td>{{ multitabla.nombre }}</td>
                     <td>
-                        <p-button icon="pi pi-pencil" severity="info" rounded outlined class="mr-2"
+                        <p-button icon="pi pi-pencil" severity="info" rounded outlined class="mr-2" appHasAction="Editar" appHasActionPath="/security/multitabla"
                             (click)="openEdit(multitabla)" />
-                        <p-button icon="pi pi-trash" severity="danger" rounded outlined
+                        <p-button icon="pi pi-trash" severity="danger" rounded outlined appHasAction="Eliminar" appHasActionPath="/security/multitabla"
                             (click)="deleteMultitabla(multitabla)" />
                     </td>
                 </tr>
@@ -87,7 +87,7 @@
                 <!-- ITEMS DINÁMICOS -->
                 <div class="flex justify-between items-center mt-2">
                     <h4 class="font-semibold text-lg">Items</h4>
-                    <p-button label="Agregar Item" icon="pi pi-plus" (click)="agregarItem()" />
+                    <p-button label="Agregar Item" icon="pi pi-plus" [appHasAction]="form.get('id')?.value ? 'Editar' : 'Crear'" appHasActionPath="/security/multitabla" (click)="agregarItem()" />
                 </div>
 
                 <div formArrayName="items" class="flex flex-col gap-3">
@@ -111,7 +111,7 @@
                                 <input pInputText formControlName="valor2" placeholder="Valor 2" class="w-full" />
                             </div>
                             <div class="flex items-center">
-                                <button pButton icon="pi pi-trash" class="p-button-danger p-button-text"
+                                <button pButton icon="pi pi-trash" class="p-button-danger p-button-text" appHasAction="Editar" appHasActionPath="/security/multitabla"
                                     (click)="eliminarItem(i)" type="button"></button>
                             </div>
                         </div>
@@ -124,7 +124,7 @@
     <ng-template #footer>
         <div class="flex justify-end gap-2">
             <p-button label="Cancelar" icon="pi pi-times" text (click)="hideDialog()" />
-            <p-button label="Guardar" icon="pi pi-check" (click)="saveUpdateMultitabla()" />
+            <p-button label="Guardar" icon="pi pi-check" [appHasAction]="form.get('id')?.value ? 'Editar' : 'Crear'" appHasActionPath="/security/multitabla" (click)="saveUpdateMultitabla()" />
         </div>
     </ng-template>
 </p-dialog>
